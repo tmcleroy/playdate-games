@@ -46,10 +46,10 @@ function draw_stopper()
 end
 
 function draw_paddle()
-  love.graphics.rectangle("fill", paddle_pos_bottom[1], paddle_pos_bottom[2], paddle_dim[1], paddle_dim[2])
-  love.graphics.rectangle("fill", paddle_pos_left[1], paddle_pos_left[2], paddle_dim[2], paddle_dim[1])
-  love.graphics.rectangle("fill", paddle_pos_right[1], paddle_pos_right[2], paddle_dim[2], paddle_dim[1])
-  love.graphics.rectangle("fill", paddle_pos_top[1], paddle_pos_top[2], paddle_dim[1], paddle_dim[2])
+  love.graphics.rectangle("fill", paddle_pos_bottom[1], paddle_pos_bottom[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
+  love.graphics.rectangle("fill", paddle_pos_left[1], paddle_pos_left[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
+  love.graphics.rectangle("fill", paddle_pos_right[1], paddle_pos_right[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
+  love.graphics.rectangle("fill", paddle_pos_top[1], paddle_pos_top[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
 end
 
 
@@ -64,6 +64,7 @@ function love.load()
   paddle_speed = 0
   paddle_vel = {0,0}
   paddle_dim = {200,20}
+  paddle_roundness = 0-- paddle_dim[2] / 2
   paddle_pos_bottom = { -- bottom center
     (window_width / 2) - (paddle_dim[1] / 2),
     window_height - paddle_dim[2]
