@@ -46,10 +46,29 @@ function draw_stopper()
 end
 
 function draw_paddle()
-  love.graphics.rectangle("fill", paddle_pos_bottom[1], paddle_pos_bottom[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
-  love.graphics.rectangle("fill", paddle_pos_left[1], paddle_pos_left[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
-  love.graphics.rectangle("fill", paddle_pos_right[1], paddle_pos_right[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
-  love.graphics.rectangle("fill", paddle_pos_top[1], paddle_pos_top[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
+  draw_bottom_paddle =
+    paddle_pos_bottom[1] <= window_width - paddle_dim[2] and
+    paddle_pos_bottom[1] >= -1 * (paddle_dim[1] - paddle_dim[2])
+  draw_left_paddle =
+    paddle_pos_left[2] <= window_height - paddle_dim[2] and
+    paddle_pos_left[2] >= -1 * (window_height - (paddle_dim[2] * 3))
+  draw_right_paddle =
+    paddle_pos_right[2] <= window_height - paddle_dim[2]
+  draw_top_paddle =
+    paddle_pos_top[1] >= -1 * (paddle_dim[1] - paddle_dim[2])
+
+  if draw_bottom_paddle then
+    love.graphics.rectangle("fill", paddle_pos_bottom[1], paddle_pos_bottom[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
+  end
+  if draw_left_paddle then
+    love.graphics.rectangle("fill", paddle_pos_left[1], paddle_pos_left[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
+  end
+  if draw_right_paddle then
+    love.graphics.rectangle("fill", paddle_pos_right[1], paddle_pos_right[2], paddle_dim[2], paddle_dim[1], paddle_roundness)
+  end
+  if draw_top_paddle then
+    love.graphics.rectangle("fill", paddle_pos_top[1], paddle_pos_top[2], paddle_dim[1], paddle_dim[2], paddle_roundness)
+  end
 end
 
 
