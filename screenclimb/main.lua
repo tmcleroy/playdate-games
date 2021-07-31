@@ -44,20 +44,12 @@ function update_physics(dt)
 end
 
 function adjust_ball_velocity()
-  -- floor
-  if (ball_pos[2] >= window_height - ball_dim[2]) then
+  -- floor                                          cieling
+  if (ball_pos[2] >= window_height - ball_dim[2] or ball_pos[2] <= 0) then
     ball_vel[2] = ball_vel[2] * -1
   end
-  -- cieling
-  if (ball_pos[2] <= 0) then
-    ball_vel[2] = ball_vel[2] * -1
-  end
-  -- left wall
-  if (ball_pos[1] <= 0) then
-    ball_vel[1] = ball_vel[1] * -1
-  end
-  -- right wall
-  if (ball_pos[1] >= window_width - ball_dim[1]) then
+  -- left wall            -- right wall
+  if (ball_pos[1] <= 0 or ball_pos[1] >= window_width - ball_dim[1]) then
     ball_vel[1] = ball_vel[1] * -1
   end
 
@@ -67,10 +59,20 @@ function adjust_ball_velocity()
         ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[1], paddle_dim[2]
       )
-      -- TODO adjust ball velocity based on collision
-      print("colliding with " .. k)
-      print(colliding_with_paddle)
-      print "!!!!!!!!!!"
+
+      if colliding_with_paddle then
+        if (k == "right" or k == "left") then
+          ball_vel[1] = ball_vel[1] * -1
+        end
+        if (k == "top" or k == "bottom") then
+          ball_vel[2] = ball_vel[2] * -1
+        end
+      end
+
+      -- -- TODO adjust ball velocity based on collision
+      -- print("colliding with " .. k)
+      -- print(colliding_with_paddle)
+      -- print "!!!!!!!!!!"
     end
   end
 end
