@@ -44,7 +44,7 @@ function adjust_ball_velocity()
   collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
   collide_left = ball_pos[1] <= 0
   collide_right = ball_pos[1] >= window_width - ball_dim[1]
-  
+
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
   end
@@ -61,13 +61,21 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
-        if (k == "top" or k == "bottom") then
+        if (k == "bottom") then
           ball_vel[2] = -1 * ball_vel[2]
           ball_vel[1] = ball_vel[1] + (paddle_vel[1] * ball_paddle_vel_transfer)
         end
-        if (k == "right" or k == "left") then
+        if (k == "top") then
+          ball_vel[2] = -1 * ball_vel[2]
+          ball_vel[1] = ball_vel[1] + (paddle_vel[1] * ball_paddle_vel_transfer * -1)
+        end
+        if (k == "left") then
           ball_vel[1] = -1 * ball_vel[1]
           ball_vel[2] = ball_vel[2] + (paddle_vel[1] * ball_paddle_vel_transfer)
+        end
+        if (k == "right") then
+          ball_vel[1] = -1 * ball_vel[1]
+          ball_vel[2] = ball_vel[2] + (paddle_vel[1] * ball_paddle_vel_transfer * -1)
         end
         -- collided last frame, indicates a stuck ball, reset ball
         if (colliding_paddles[k]) then
@@ -152,7 +160,7 @@ function love.load()
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 5
-  ball_paddle_vel_transfer = 0.25 -- percentage of paddle velocity to transfer to ball on collision
+  ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
   colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
   paddle_speed = 0
