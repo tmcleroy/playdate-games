@@ -15,16 +15,12 @@ end
 function update_physics(dt)
   -- ball
   adjust_ball_velocity()
+  ball_vel = {ball_vel[1] + (ball_speed * dt), ball_vel[2] + (ball_speed * dt)}
+  ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
 
-  ball_vel[1] = ball_vel[1] + (ball_speed * dt)
-  ball_vel[2] = ball_vel[2] + (ball_speed * dt)
-
-  ball_pos[1] = ball_pos[1] + ball_vel[1]
-  ball_pos[2] = ball_pos[2] + ball_vel[2]
   -- paddle
-  paddle_vel[1] = paddle_vel[1] + (paddle_speed * dt)
-
   adjust_paddle_velocity()
+  paddle_vel[1] = paddle_vel[1] + (paddle_speed * dt)
 
   x_pos_bottom = paddle_pos.bottom[1] + paddle_vel[1]
 
@@ -33,34 +29,40 @@ function update_physics(dt)
 
   paddle_pos.bottom[1] = x_pos_bottom
 
-  y_pos_left = paddle_pos.bottom[1] + window_height - paddle_dim[2]
+  y_pos_left = paddle_pos.bottom[1] + window_height - paddle_dim_legacy[2]
   paddle_pos.left[2] = y_pos_left
 
-  y_pos_right = -1 * (paddle_pos.bottom[1] - (window_height * 2) + (paddle_dim[2] * 3))
+  y_pos_right = -1 * (paddle_pos.bottom[1] - (window_height * 2) + (paddle_dim_legacy[2] * 3))
   paddle_pos.right[2] = y_pos_right
 
-  x_pos_top = -1 * (paddle_pos.bottom[1] + window_width - (paddle_dim[2] * 0))
+  x_pos_top = -1 * (paddle_pos.bottom[1] + window_width - (paddle_dim_legacy[2] * 0))
   paddle_pos.top[1] = x_pos_top
 end
 
 function adjust_ball_velocity()
-  -- floor                                          cieling
-  if (ball_pos[2] >= window_height - ball_dim[2] or ball_pos[2] <= 0) then
+  -- wall collision
+  collide_top = ball_pos[2] <= 0
+  collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
+  collide_left = ball_pos[1] <= 0
+  collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
   end
-  -- left wall            -- right wall
-  if (ball_pos[1] <= 0 or ball_pos[1] >= window_width - ball_dim[1]) then
+  if (collide_left or collide_right) then
     ball_vel[1] = ball_vel[1] * -1
   end
 
+  -- paddle collision
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
+      -- print("VISIBLE " .. k)
       colliding_with_paddle = colliding(
         ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
-        paddle_pos[k][1], paddle_pos[k][2], paddle_dim[1], paddle_dim[2]
+        paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
-
+      
       if colliding_with_paddle then
+        -- print("COLLIDING " .. k)
         if (k == "right" or k == "left") then
           ball_vel[1] = ball_vel[1] * -1
         end
@@ -68,20 +70,15 @@ function adjust_ball_velocity()
           ball_vel[2] = ball_vel[2] * -1
         end
       end
-
-      -- -- TODO adjust ball velocity based on collision
-      -- print("colliding with " .. k)
-      -- print(colliding_with_paddle)
-      -- print "!!!!!!!!!!"
     end
   end
 end
 
 function adjust_paddle_velocity()
+  -- stopper collision
   if (paddle_pos.bottom[1] <= min_coll_pt) then
     paddle_vel[1] = math.max((paddle_vel[1] * -1) / 2, min_coll_pt)
   end
-
   if (paddle_pos.bottom[1] >= max_coll_pt) then
     paddle_vel[1] = math.min((paddle_vel[1] * -1) / 2, max_coll_pt)
   end
@@ -95,32 +92,25 @@ function draw_stopper()
   love.graphics.rectangle("fill", stopper_pos[1], stopper_pos[2], stopper_dim[1], stopper_dim[2])
 end
 
-function draw_paddle()
-  if visible_paddles.bottom then
-    love.graphics.rectangle("fill", paddle_pos.bottom[1], paddle_pos.bottom[2], paddle_dim[1], paddle_dim[2], paddle_border_radius)
-  end
-  if visible_paddles.left then
-    love.graphics.rectangle("fill", paddle_pos.left[1], paddle_pos.left[2], paddle_dim[2], paddle_dim[1], paddle_border_radius)
-  end
-  if visible_paddles.right then
-    love.graphics.rectangle("fill", paddle_pos.right[1], paddle_pos.right[2], paddle_dim[2], paddle_dim[1], paddle_border_radius)
-  end
-  if visible_paddles.top then
-    love.graphics.rectangle("fill", paddle_pos.top[1], paddle_pos.top[2], paddle_dim[1], paddle_dim[2], paddle_border_radius)
+function draw_paddles()
+  for k, v in pairs(visible_paddles) do
+    if visible_paddles[k] then
+      love.graphics.rectangle("fill", paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2], paddle_border_radius)
+    end
   end
 end
 
 function get_visible_paddles()
   bottom =
-    paddle_pos.bottom[1] <= window_width - paddle_dim[2] and
-    paddle_pos.bottom[1] >= -1 * (paddle_dim[1] - paddle_dim[2])
+    paddle_pos.bottom[1] <= window_width - paddle_dim_legacy[2] and
+    paddle_pos.bottom[1] >= -1 * (paddle_dim_legacy[1] - paddle_dim_legacy[2])
   left =
-    paddle_pos.left[2] <= window_height - paddle_dim[2] and
-    paddle_pos.left[2] >= -1 * (window_height - (paddle_dim[2] * 3))
+    paddle_pos.left[2] <= window_height - paddle_dim_legacy[2] and
+    paddle_pos.left[2] >= -1 * (window_height - (paddle_dim_legacy[2] * 3))
   right =
-    paddle_pos.right[2] <= window_height - paddle_dim[2]
+    paddle_pos.right[2] <= window_height - paddle_dim_legacy[2]
   top =
-    paddle_pos.top[1] >= -1 * (paddle_dim[1] - paddle_dim[2])
+    paddle_pos.top[1] >= -1 * (paddle_dim_legacy[1] - paddle_dim_legacy[2])
 
   return { bottom = bottom, left = left, right = right, top = top }
 end
@@ -142,19 +132,25 @@ function love.load()
 
   paddle_speed = 0
   paddle_vel = {0,0}
-  paddle_dim = {200,20}
-  paddle_border_radius = paddle_dim[2] / 2 -- set to 0 to square it off
+  paddle_dim_legacy = {200,20}
+  paddle_border_radius = paddle_dim_legacy[2] / 2 -- set to 0 to square it off
+  paddle_dim = {
+    bottom = {200, 20},
+    left = {20, 200},
+    right = {20, 200},
+    top = {200, 20}
+  }
   paddle_pos = {
     bottom = { -- bottom center
-      (window_width / 2) - (paddle_dim[1] / 2),
-      window_height - paddle_dim[2]
+      (window_width / 2) - (paddle_dim_legacy[1] / 2),
+      window_height - paddle_dim_legacy[2]
     },
     left = {
       0,
-      window_height - paddle_dim[1]
+      window_height - paddle_dim_legacy[1]
     },
     right = {
-      window_width - paddle_dim[2],
+      window_width - paddle_dim_legacy[2],
       0
     },
     top = {
@@ -164,14 +160,14 @@ function love.load()
   }
 
   -- left and rightmost points at which the paddle is considered colliding with the stopper
-  min_coll_pt = 0 - (paddle_dim[1] * 3) + paddle_dim[2]
+  min_coll_pt = 0 - (paddle_dim_legacy[1] * 3) + paddle_dim_legacy[2]
   max_coll_pt = window_width
 
   love.window.setMode(window_width, window_height)
 end
 
 function love.draw()
-  draw_paddle()
+  draw_paddles()
   draw_stopper()
   draw_ball()
 end
