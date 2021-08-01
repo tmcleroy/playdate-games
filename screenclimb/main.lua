@@ -8,14 +8,13 @@ function handle_input(key)
       paddle_vel = {0, 0}
       ball_vel = {0, 0}
     elseif key == 'return' then
-      ball_vel = {1, 2}
+      ball_vel = {0, 2}
     end
 end
   
 function update_physics(dt)
   -- ball
   adjust_ball_velocity()
-  ball_vel = {ball_vel[1] + (ball_speed * dt), ball_vel[2] + (ball_speed * dt)}
   ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
 
   -- paddle
@@ -63,14 +62,30 @@ function adjust_ball_velocity()
       
       if colliding_with_paddle then
         -- print("COLLIDING " .. k)
-        if (k == "right" or k == "left") then
-          ball_vel[1] = ball_vel[1] * -1
-        end
         if (k == "top" or k == "bottom") then
-          ball_vel[2] = ball_vel[2] * -1
+          ball_vel[2] = -1 * ball_vel[2]
+          ball_vel[1] = ball_vel[1] + (paddle_vel[1] * ball_paddle_vel_transfer)
+        end
+        if (k == "right" or k == "left") then
+          ball_vel[1] = -1 * ball_vel[1]
+          ball_vel[2] = ball_vel[2] + (paddle_vel[1] * ball_paddle_vel_transfer)
         end
       end
     end
+  end
+
+  -- limit to max vel
+  if (ball_vel[1] < -1 * ball_vel_max) then
+    ball_vel[1] = -1 * ball_vel_max
+  end
+  if (ball_vel[1] > ball_vel_max) then
+    ball_vel[1] = ball_vel_max
+  end
+  if (ball_vel[2] < -1 * ball_vel_max) then
+    ball_vel[2] = -1 * ball_vel_max
+  end
+  if (ball_vel[2] > ball_vel_max) then
+    ball_vel[2] = ball_vel_max
   end
 end
 
@@ -128,7 +143,8 @@ function love.load()
   ball_dim = {20, 20}
   ball_pos = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
   ball_vel = {0, 0}
-  ball_speed = 0
+  ball_vel_max = 5
+  ball_paddle_vel_transfer = 0.25 -- percentage of paddle velocity to transfer to ball on collision
 
   paddle_speed = 0
   paddle_vel = {0,0}
