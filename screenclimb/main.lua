@@ -34,14 +34,24 @@ function update_physics(dt)
 
   paddle_pos.bottom[1] = x_pos_bottom
 
-  y_pos_left = paddle_pos.bottom[1] + window_height - paddle_dim_legacy[2]
+  y_pos_left = paddle_pos.bottom[1] + window_height - paddle_dim.left[1]
   paddle_pos.left[2] = y_pos_left
 
-  y_pos_right = -1 * (paddle_pos.bottom[1] - (window_height * 2) + (paddle_dim_legacy[2] * 3))
+  y_pos_right = ((window_width + paddle_dim.bottom[2])) - x_pos_bottom - (paddle_dim.bottom[1] - (window_width / 2 ))
   paddle_pos.right[2] = y_pos_right
 
-  x_pos_top = -1 * (paddle_pos.bottom[1] + window_width - (paddle_dim_legacy[2] * 0))
+  x_pos_top = 0
+  if (x_pos_bottom <= (-1 * (paddle_dim.bottom[1] * 2))) then
+    x_pos_top = math.abs(x_pos_bottom + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
+  end
+  if (x_pos_bottom >= (-1 * (paddle_dim.bottom[1] * 2))) then
+    x_pos_top = -1 * (x_pos_bottom + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
+  end
+  
   paddle_pos.top[1] = x_pos_top
+
+  print("xposbottom " .. x_pos_bottom)
+  print("yposright" .. y_pos_right)
 end
 
 function adjust_ball_velocity()
@@ -138,17 +148,18 @@ end
 
 function get_visible_paddles()
   bottom =
-    paddle_pos.bottom[1] <= window_width - paddle_dim_legacy[2] and
-    paddle_pos.bottom[1] >= -1 * (paddle_dim_legacy[1] - paddle_dim_legacy[2])
+    paddle_pos.bottom[1] <= window_width - paddle_dim.bottom[2] and
+    paddle_pos.bottom[1] >= -1 * (paddle_dim.bottom[1] - paddle_dim.bottom[2])
   left =
-    paddle_pos.left[2] <= window_height - paddle_dim_legacy[2] and
-    paddle_pos.left[2] >= -1 * (window_height - (paddle_dim_legacy[2] * 3))
+    paddle_pos.left[2] <= window_height - paddle_dim.left[1] and
+    paddle_pos.left[2] >= -1 * (window_height - (paddle_dim.left[1] * 3))
   right =
-    paddle_pos.right[2] <= window_height - paddle_dim_legacy[2]
+    paddle_pos.right[2] <= window_height - paddle_dim.right[1]
   top =
-    paddle_pos.top[1] >= -1 * (paddle_dim_legacy[1] - paddle_dim_legacy[2])
+    paddle_pos.top[1] >= -1 * (paddle_dim.top[1] - paddle_dim.top[2])
 
   return { bottom = bottom, left = left, right = right, top = top }
+  -- return { bottom = true, left = true, right = true, top = true }
 end
 
 
@@ -176,25 +187,24 @@ function love.load()
 
   paddle_speed = 0
   paddle_vel = {0,0}
-  paddle_dim_legacy = {200,20}
-  paddle_border_radius = paddle_dim_legacy[2] / 2 -- set to 0 to square it off
   paddle_dim = {
     bottom = {200,20},
     left = {20,200},
     right = {20,200},
     top = {200,20}
   }
+  paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
   paddle_pos = {
     bottom = { -- bottom center
-      (window_width / 2) - (paddle_dim_legacy[1] / 2),
-      window_height - paddle_dim_legacy[2]
+      (window_width / 2) - (paddle_dim.bottom[1] / 2),
+      window_height - paddle_dim.bottom[2]
     },
     left = {
       0,
-      window_height - paddle_dim_legacy[1]
+      window_height - paddle_dim.left[2]
     },
     right = {
-      window_width - paddle_dim_legacy[2],
+      window_width - paddle_dim.right[1],
       0
     },
     top = {
@@ -204,7 +214,7 @@ function love.load()
   }
 
   -- left and rightmost points at which the paddle is considered colliding with the stopper
-  min_coll_pt = 0 - (paddle_dim_legacy[1] * 3) + paddle_dim_legacy[2]
+  min_coll_pt = -1 * (window_width + window_height - (paddle_dim.bottom[2] * 3))
   max_coll_pt = window_width
 
   love.window.setMode(window_width, window_height)
@@ -253,6 +263,7 @@ function object_to_string(o)
 end
 
 -- https://love2d.org/wiki/love.graphics.rectangle
+-- modified to rotate about the center of the rectangle
 function drawRotatedRectangle(mode, x, y, width, height, angle)
 	-- We cannot rotate the rectangle directly, but we
 	-- can move and rotate the coordinate system.
