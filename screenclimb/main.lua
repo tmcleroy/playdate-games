@@ -46,10 +46,10 @@ end
 
 function adjust_ball_velocity()
   -- wall collision
-  collide_top = ball_pos[2] - (ball_dim[2] / 2) <= 0
-  collide_bottom = ball_pos[2] - (ball_dim[2] / 2) >= window_height - ball_dim[2]
-  collide_left = ball_pos[1] - (ball_dim[1] / 2) <= 0
-  collide_right = ball_pos[1] - (ball_dim[1] / 2) >= window_width - ball_dim[1]
+  collide_top = ball_pos[2] <= 0
+  collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
+  collide_left = ball_pos[1] <= 0
+  collide_right = ball_pos[1] >= window_width - ball_dim[1]
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
@@ -62,7 +62,7 @@ function adjust_ball_velocity()
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
       colliding_with_paddle = colliding(
-        ball_pos[1] - (ball_dim[1] / 2), ball_pos[2] - (ball_dim[2] / 2), ball_dim[1], ball_dim[2],
+        ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
 
@@ -121,7 +121,7 @@ end
 
 function draw_ball()
   -- love.graphics.rectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
-  drawRotatedRectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2], ball_angle)
+  drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
 end
 
 function draw_stopper()
@@ -160,12 +160,12 @@ function love.load()
 
   love.keyboard.setKeyRepeat(true, 0)
 
-  stopper_dim = {20, 20}
-  stopper_pos = {window_width - stopper_dim[1], 0} -- top right
+  stopper_dim = {20,20}
+  stopper_pos = {window_width - stopper_dim[1],0} -- top right
 
-  ball_dim = {20, 20}
+  ball_dim = {20,20}
   ball_angle = 0
-  ball_vel_initial = {0, 0}
+  ball_vel_initial = {0,0}
   ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
@@ -179,10 +179,10 @@ function love.load()
   paddle_dim_legacy = {200,20}
   paddle_border_radius = paddle_dim_legacy[2] / 2 -- set to 0 to square it off
   paddle_dim = {
-    bottom = {200, 20},
-    left = {20, 200},
-    right = {20, 200},
-    top = {200, 20}
+    bottom = {200,20},
+    left = {20,200},
+    right = {20,200},
+    top = {200,20}
   }
   paddle_pos = {
     bottom = { -- bottom center
