@@ -9,6 +9,12 @@ function handle_input(key)
       ball_vel = {0, 0}
     elseif key == 'return' then
       ball_vel = {0, 2}
+    elseif key == 'a' then
+      ball_angle = ball_angle - ball_rotation_speed
+    elseif key == 'd' then
+      ball_angle = ball_angle + ball_rotation_speed
+    elseif key == "escape" then
+      love.event.quit()
     end
 end
   
@@ -40,10 +46,10 @@ end
 
 function adjust_ball_velocity()
   -- wall collision
-  collide_top = ball_pos[2] <= 0
-  collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
-  collide_left = ball_pos[1] <= 0
-  collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  collide_top = ball_pos[2] - (ball_dim[2] / 2) <= 0
+  collide_bottom = ball_pos[2] - (ball_dim[2] / 2) >= window_height - ball_dim[2]
+  collide_left = ball_pos[1] - (ball_dim[1] / 2) <= 0
+  collide_right = ball_pos[1] - (ball_dim[1] / 2) >= window_width - ball_dim[1]
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
@@ -56,7 +62,7 @@ function adjust_ball_velocity()
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
       colliding_with_paddle = colliding(
-        ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
+        ball_pos[1] - (ball_dim[1] / 2), ball_pos[2] - (ball_dim[2] / 2), ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
 
@@ -114,7 +120,8 @@ function adjust_paddle_velocity()
 end
 
 function draw_ball()
-  love.graphics.rectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
+  -- love.graphics.rectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
+  drawRotatedRectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2], ball_angle)
 end
 
 function draw_stopper()
@@ -151,15 +158,19 @@ function love.load()
   window_width = 400
   window_height = 240
 
+  love.keyboard.setKeyRepeat(true, 0)
+
   stopper_dim = {20, 20}
   stopper_pos = {window_width - stopper_dim[1], 0} -- top right
 
   ball_dim = {20, 20}
+  ball_angle = 0
   ball_vel_initial = {0, 0}
   ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 5
+  ball_rotation_speed = 0.1
   ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
   colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
@@ -239,4 +250,15 @@ function object_to_string(o)
   else
       return tostring(o)
   end
+end
+
+-- https://love2d.org/wiki/love.graphics.rectangle
+function drawRotatedRectangle(mode, x, y, width, height, angle)
+	-- We cannot rotate the rectangle directly, but we
+	-- can move and rotate the coordinate system.
+	love.graphics.push()
+	love.graphics.translate(x, y)
+	love.graphics.rotate(angle)
+	love.graphics.rectangle(mode, -1*(width/2), -1*(height/2), width, height)
+	love.graphics.pop()
 end
