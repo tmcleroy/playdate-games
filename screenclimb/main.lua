@@ -26,10 +26,10 @@ function update_physics(dt)
   -- paddle
   adjust_paddle_velocity(dt)
 
-  bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
-  left_pos = paddle_pos.bottom[1] + 220
-  right_pos = 420 - bottom_pos
-  top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
+  local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
+  local left_pos = paddle_pos.bottom[1] + 220
+  local right_pos = 420 - bottom_pos
+  local top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
 
   -- when near the end of paddle cycle, position the right paddle to make the transition appear seamless
   if (bottom_pos <= -580) then
@@ -50,10 +50,10 @@ end
 
 function adjust_ball_velocity()
   -- wall collision
-  collide_top = ball_pos[2] <= 0
-  collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
-  collide_left = ball_pos[1] <= 0
-  collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  local collide_top = ball_pos[2] <= 0
+  local collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
+  local collide_left = ball_pos[1] <= 0
+  local collide_right = ball_pos[1] >= window_width - ball_dim[1]
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
@@ -65,7 +65,7 @@ function adjust_ball_velocity()
   -- paddle collision, only check collisions with visible paddles
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
-      colliding_with_paddle = colliding(
+      local colliding_with_paddle = colliding(
         ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
@@ -114,7 +114,7 @@ function adjust_ball_velocity()
 end
 
 function adjust_paddle_velocity(dt)
-  new_paddle_vel = paddle_vel[1] + (paddle_speed * dt)
+  local new_paddle_vel = paddle_vel[1] + (paddle_speed * dt)
   
   -- limit paddle velocity to max
   if (new_paddle_vel < 0) then
@@ -127,7 +127,6 @@ function adjust_paddle_velocity(dt)
 end
 
 function draw_ball()
-  -- love.graphics.rectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
   drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
 end
 
@@ -141,15 +140,15 @@ end
 
 -- problem in top right corner
 function get_visible_paddles()
-  bottom =
+  local bottom =
     paddle_pos.bottom[1] <= window_width - paddle_dim.bottom[2] and
     paddle_pos.bottom[1] >= -1 * (paddle_dim.bottom[1] - paddle_dim.bottom[2])
-  left =
+  local left =
     paddle_pos.left[2] <= window_height - paddle_dim.left[1] and
     paddle_pos.left[2] >= -1 * (window_height - (paddle_dim.left[1] * 3))
-  right =
+  local right =
     paddle_pos.right[2] <= window_height - paddle_dim.right[1]
-  top =
+  local top =
     paddle_pos.top[1] >= -1 * (paddle_dim.top[1] - paddle_dim.top[2])
 
   return { bottom = bottom, left = left, right = right, top = top }
@@ -164,9 +163,6 @@ function love.load()
   window_height = 240
 
   love.keyboard.setKeyRepeat(true, 0)
-
-  stopper_dim = {20,20}
-  stopper_pos = {window_width - stopper_dim[1],0} -- top right
 
   ball_dim = {20,20}
   ball_angle = 0
@@ -207,10 +203,6 @@ function love.load()
       0
     }
   }
-
-  -- left and rightmost points at which the paddle is considered colliding with the stopper
-  min_coll_pt = -1 * (window_width + window_height - (paddle_dim.bottom[2] * 3))
-  max_coll_pt = window_width
 
   love.window.setMode(window_width, window_height)
 end
