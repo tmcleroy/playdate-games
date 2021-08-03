@@ -20,42 +20,32 @@ end
   
 function update_physics(dt)
   -- ball
-  adjust_ball_velocity()
+  adjust_ball_velocity(dt)
   ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
 
   -- paddle
-  adjust_paddle_velocity()
-  paddle_vel[1] = paddle_vel[1] + (paddle_speed * dt)
+  adjust_paddle_velocity(dt)
 
   bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
+  left_pos = paddle_pos.bottom[1] + 220
+  right_pos = 420 - bottom_pos
+  top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
 
-  -- if bottom_pos < min_coll_pt then bottom_pos = min_coll_pt end
-  -- if bottom_pos > max_coll_pt then bottom_pos = max_coll_pt end
+  -- when near the end of paddle cycle, position the right paddle to make the transition appear seamless
+  if (bottom_pos <= -580) then
+    right_pos = -200 + math.abs(bottom_pos + 580)
+  end
+  -- seamless reset of bottom paddle position that controls all other paddle positions
+  if (bottom_pos <= -800) then
+    bottom_pos = 400
+  elseif (bottom_pos >= 400) then
+    bottom_pos = -800
+  end
 
   paddle_pos.bottom[1] = bottom_pos
-
-  left_pos = paddle_pos.bottom[1] + window_height - paddle_dim.left[1]
   paddle_pos.left[2] = left_pos
-
-  right_pos = ((window_width + paddle_dim.bottom[2])) - bottom_pos - (paddle_dim.bottom[1] - (window_width / 2 ))
-
-  if (bottom_pos <= -600) then
-    right_pos = -1 * paddle_dim.right[2]
-  end
-
   paddle_pos.right[2] = right_pos
-
-  top_pos = 0
-  if (bottom_pos <= (-1 * (paddle_dim.bottom[1] * 2))) then
-    top_pos = math.abs(bottom_pos + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
-  end
-  if (bottom_pos >= (-1 * (paddle_dim.bottom[1] * 2))) then
-    top_pos = -1 * (bottom_pos + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
-  end
   paddle_pos.top[1] = top_pos
-
-  print("bottom_pos " .. bottom_pos)
-  print("right_pos " .. right_pos)
 end
 
 function adjust_ball_velocity()
@@ -123,23 +113,22 @@ function adjust_ball_velocity()
   end
 end
 
-function adjust_paddle_velocity()
-  -- -- stopper collision
-  -- if (paddle_pos.bottom[1] <= min_coll_pt) then
-  --   paddle_vel[1] = math.max((paddle_vel[1] * -1) / 2, min_coll_pt)
-  -- end
-  -- if (paddle_pos.bottom[1] >= max_coll_pt) then
-  --   paddle_vel[1] = math.min((paddle_vel[1] * -1) / 2, max_coll_pt)
-  -- end
+function adjust_paddle_velocity(dt)
+  new_paddle_vel = paddle_vel[1] + (paddle_speed * dt)
+  
+  -- limit paddle velocity to max
+  if (new_paddle_vel < 0) then
+    new_paddle_vel = math.max(-1 * paddle_vel_max, new_paddle_vel)
+  elseif (new_paddle_vel > 0) then
+    new_paddle_vel = math.min(paddle_vel_max, new_paddle_vel)
+  end
+
+  paddle_vel[1] = new_paddle_vel
 end
 
 function draw_ball()
   -- love.graphics.rectangle("fill", ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
   drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
-end
-
-function draw_stopper()
-  -- love.graphics.rectangle("fill", stopper_pos[1], stopper_pos[2], stopper_dim[1], stopper_dim[2])
 end
 
 function draw_paddles()
@@ -150,6 +139,7 @@ function draw_paddles()
   end
 end
 
+-- problem in top right corner
 function get_visible_paddles()
   bottom =
     paddle_pos.bottom[1] <= window_width - paddle_dim.bottom[2] and
@@ -162,8 +152,8 @@ function get_visible_paddles()
   top =
     paddle_pos.top[1] >= -1 * (paddle_dim.top[1] - paddle_dim.top[2])
 
-  -- return { bottom = bottom, left = left, right = right, top = top }
-  return { bottom = true, left = true, right = true, top = true }
+  return { bottom = bottom, left = left, right = right, top = top }
+  -- return { bottom = true, left = true, right = true, top = true }
 end
 
 
@@ -191,6 +181,7 @@ function love.load()
 
   paddle_speed = 0
   paddle_vel = {0,0}
+  paddle_vel_max = 10
   paddle_dim = {
     bottom = {200,20},
     left = {20,200},
@@ -226,12 +217,12 @@ end
 
 function love.draw()
   draw_paddles()
-  draw_stopper()
   draw_ball()
 end
 
 function love.update(dt)
   visible_paddles = get_visible_paddles()
+  print(object_to_string(visible_paddles))
   update_physics(dt)
 end
 
