@@ -3,7 +3,7 @@ window_width = 400
 window_height = 240
 
 crank_angle = 0
-crank_step_amount = 1
+crank_step_amount = 5
 use_crank = true
 
 ball_dim = {20,20}
@@ -80,10 +80,11 @@ function update_physics(dt)
 
   -- local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
   local bottom_pos = use_crank
-    and
-      -800 + ((crank_angle / 359) * 1200) + paddle_vel[1]
+    and -- bottom_pos should range from -800 to 1200, convert the angle value to a number in that range
+      -800 + ((crank_angle / 359) * 1200)
     or
       paddle_pos.bottom[1] + paddle_vel[1]
+
   local left_pos = paddle_pos.bottom[1] + 220
   local right_pos = 420 - bottom_pos
   local top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
