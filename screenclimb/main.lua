@@ -81,7 +81,7 @@ function update_physics(dt)
   -- local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
   local bottom_pos = use_crank
     and
-      -800 + ((crank_angle / 359) * 1200)
+      -800 + ((crank_angle / 359) * 1200) + paddle_vel[1]
     or
       paddle_pos.bottom[1] + paddle_vel[1]
   local left_pos = paddle_pos.bottom[1] + 220
