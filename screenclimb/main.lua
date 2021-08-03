@@ -1,8 +1,60 @@
+-- playdate screen resolution
+window_width = 400
+window_height = 240
+
+crank_angle = 0
+crank_step_amount = 1
+use_crank = true
+
+ball_dim = {20,20}
+ball_angle = 0
+ball_vel_initial = {0,0}
+ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
+ball_pos = ball_pos_initial
+ball_vel = ball_vel_initial
+ball_vel_max = 5
+ball_rotation_speed = 0.1
+ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
+colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
+
+paddle_speed = 0
+paddle_vel = {0,0}
+paddle_vel_max = 10
+paddle_dim = {
+  bottom = {200,20},
+  left = {20,200},
+  right = {20,200},
+  top = {200,20}
+}
+paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
+paddle_pos = {
+  bottom = { -- bottom center
+    (window_width / 2) - (paddle_dim.bottom[1] / 2),
+    window_height - paddle_dim.bottom[2]
+  },
+  left = {
+    0,
+    window_height - paddle_dim.left[2]
+  },
+  right = {
+    window_width - paddle_dim.right[1],
+    0
+  },
+  top = {
+    0,
+    0
+  }
+}
+
 function handle_input(key)
   if key == 'right' then
       paddle_speed = 4
+      crank_angle = crank_angle + crank_step_amount
+      if (crank_angle >= 360) then crank_angle = 0 end
     elseif key == 'left' then
       paddle_speed = -4
+      crank_angle = crank_angle - crank_step_amount
+      if (crank_angle <= -1) then crank_angle = 359 end
     elseif key == 'space' then
       paddle_speed = 0
       paddle_vel = {0, 0}
@@ -26,7 +78,12 @@ function update_physics(dt)
   -- paddle
   adjust_paddle_velocity(dt)
 
-  local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
+  -- local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
+  local bottom_pos = use_crank
+    and
+      -800 + ((crank_angle / 359) * 1200)
+    or
+      paddle_pos.bottom[1] + paddle_vel[1]
   local left_pos = paddle_pos.bottom[1] + 220
   local right_pos = 420 - bottom_pos
   local top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
@@ -158,52 +215,7 @@ end
 
 -- SYSTEM
 function love.load()
-  -- playdate screen resolution
-  window_width = 400
-  window_height = 240
-
   love.keyboard.setKeyRepeat(true, 0)
-
-  ball_dim = {20,20}
-  ball_angle = 0
-  ball_vel_initial = {0,0}
-  ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
-  ball_pos = ball_pos_initial
-  ball_vel = ball_vel_initial
-  ball_vel_max = 5
-  ball_rotation_speed = 0.1
-  ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
-  colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
-
-  paddle_speed = 0
-  paddle_vel = {0,0}
-  paddle_vel_max = 10
-  paddle_dim = {
-    bottom = {200,20},
-    left = {20,200},
-    right = {20,200},
-    top = {200,20}
-  }
-  paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
-  paddle_pos = {
-    bottom = { -- bottom center
-      (window_width / 2) - (paddle_dim.bottom[1] / 2),
-      window_height - paddle_dim.bottom[2]
-    },
-    left = {
-      0,
-      window_height - paddle_dim.left[2]
-    },
-    right = {
-      window_width - paddle_dim.right[1],
-      0
-    },
-    top = {
-      0,
-      0
-    }
-  }
-
   love.window.setMode(window_width, window_height)
 end
 
@@ -214,7 +226,9 @@ end
 
 function love.update(dt)
   visible_paddles = get_visible_paddles()
-  print(object_to_string(visible_paddles))
+  print("paddle_pos.bottom[1] " .. paddle_pos.bottom[1])
+  print("crank_angle " .. crank_angle)
+  -- print(object_to_string(visible_paddles))
   update_physics(dt)
 end
 
