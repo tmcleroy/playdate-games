@@ -195,18 +195,15 @@ function draw_paddles()
   end
 end
 
--- problem in top right corner
 function get_visible_paddles()
   local bottom =
-    paddle_pos.bottom[1] <= window_width - paddle_dim.bottom[2] and
-    paddle_pos.bottom[1] >= -1 * (paddle_dim.bottom[1] - paddle_dim.bottom[2])
+    paddle_pos.bottom[1] <= 380 and paddle_pos.bottom[1] >= -180
   local left =
-    paddle_pos.left[2] <= window_height - paddle_dim.left[1] and
-    paddle_pos.left[2] >= -1 * (window_height - (paddle_dim.left[1] * 3))
+    paddle_pos.left[2] <= 220 and paddle_pos.left[2] >= -180
   local right =
-    paddle_pos.right[2] <= window_height - paddle_dim.right[1]
+  paddle_pos.right[2] <= 220 and paddle_pos.right[2] >= -180
   local top =
-    paddle_pos.top[1] >= -1 * (paddle_dim.top[1] - paddle_dim.top[2])
+    paddle_pos.top[1] <= 380 and paddle_pos.top[1] >= - 180
 
   return { bottom = bottom, left = left, right = right, top = top }
   -- return { bottom = true, left = true, right = true, top = true }
@@ -226,9 +223,6 @@ end
 
 function love.update(dt)
   visible_paddles = get_visible_paddles()
-  print("paddle_pos.bottom[1] " .. paddle_pos.bottom[1])
-  print("crank_angle " .. crank_angle)
-  -- print(object_to_string(visible_paddles))
   update_physics(dt)
 end
 
