@@ -27,31 +27,35 @@ function update_physics(dt)
   adjust_paddle_velocity()
   paddle_vel[1] = paddle_vel[1] + (paddle_speed * dt)
 
-  x_pos_bottom = paddle_pos.bottom[1] + paddle_vel[1]
+  bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
 
-  if x_pos_bottom < min_coll_pt then x_pos_bottom = min_coll_pt end
-  if x_pos_bottom > max_coll_pt then x_pos_bottom = max_coll_pt end
+  -- if bottom_pos < min_coll_pt then bottom_pos = min_coll_pt end
+  -- if bottom_pos > max_coll_pt then bottom_pos = max_coll_pt end
 
-  paddle_pos.bottom[1] = x_pos_bottom
+  paddle_pos.bottom[1] = bottom_pos
 
-  y_pos_left = paddle_pos.bottom[1] + window_height - paddle_dim.left[1]
-  paddle_pos.left[2] = y_pos_left
+  left_pos = paddle_pos.bottom[1] + window_height - paddle_dim.left[1]
+  paddle_pos.left[2] = left_pos
 
-  y_pos_right = ((window_width + paddle_dim.bottom[2])) - x_pos_bottom - (paddle_dim.bottom[1] - (window_width / 2 ))
-  paddle_pos.right[2] = y_pos_right
+  right_pos = ((window_width + paddle_dim.bottom[2])) - bottom_pos - (paddle_dim.bottom[1] - (window_width / 2 ))
 
-  x_pos_top = 0
-  if (x_pos_bottom <= (-1 * (paddle_dim.bottom[1] * 2))) then
-    x_pos_top = math.abs(x_pos_bottom + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
+  if (bottom_pos <= -600) then
+    right_pos = -1 * paddle_dim.right[2]
   end
-  if (x_pos_bottom >= (-1 * (paddle_dim.bottom[1] * 2))) then
-    x_pos_top = -1 * (x_pos_bottom + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
-  end
-  
-  paddle_pos.top[1] = x_pos_top
 
-  print("xposbottom " .. x_pos_bottom)
-  print("yposright" .. y_pos_right)
+  paddle_pos.right[2] = right_pos
+
+  top_pos = 0
+  if (bottom_pos <= (-1 * (paddle_dim.bottom[1] * 2))) then
+    top_pos = math.abs(bottom_pos + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
+  end
+  if (bottom_pos >= (-1 * (paddle_dim.bottom[1] * 2))) then
+    top_pos = -1 * (bottom_pos + (paddle_dim.bottom[1] * 2)) + (paddle_dim.bottom[1] - (window_width / 2 ))
+  end
+  paddle_pos.top[1] = top_pos
+
+  print("bottom_pos " .. bottom_pos)
+  print("right_pos " .. right_pos)
 end
 
 function adjust_ball_velocity()
@@ -120,13 +124,13 @@ function adjust_ball_velocity()
 end
 
 function adjust_paddle_velocity()
-  -- stopper collision
-  if (paddle_pos.bottom[1] <= min_coll_pt) then
-    paddle_vel[1] = math.max((paddle_vel[1] * -1) / 2, min_coll_pt)
-  end
-  if (paddle_pos.bottom[1] >= max_coll_pt) then
-    paddle_vel[1] = math.min((paddle_vel[1] * -1) / 2, max_coll_pt)
-  end
+  -- -- stopper collision
+  -- if (paddle_pos.bottom[1] <= min_coll_pt) then
+  --   paddle_vel[1] = math.max((paddle_vel[1] * -1) / 2, min_coll_pt)
+  -- end
+  -- if (paddle_pos.bottom[1] >= max_coll_pt) then
+  --   paddle_vel[1] = math.min((paddle_vel[1] * -1) / 2, max_coll_pt)
+  -- end
 end
 
 function draw_ball()
@@ -135,7 +139,7 @@ function draw_ball()
 end
 
 function draw_stopper()
-  love.graphics.rectangle("fill", stopper_pos[1], stopper_pos[2], stopper_dim[1], stopper_dim[2])
+  -- love.graphics.rectangle("fill", stopper_pos[1], stopper_pos[2], stopper_dim[1], stopper_dim[2])
 end
 
 function draw_paddles()
@@ -158,8 +162,8 @@ function get_visible_paddles()
   top =
     paddle_pos.top[1] >= -1 * (paddle_dim.top[1] - paddle_dim.top[2])
 
-  return { bottom = bottom, left = left, right = right, top = top }
-  -- return { bottom = true, left = true, right = true, top = true }
+  -- return { bottom = bottom, left = left, right = right, top = top }
+  return { bottom = true, left = true, right = true, top = true }
 end
 
 
