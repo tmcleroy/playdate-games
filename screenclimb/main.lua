@@ -2,9 +2,11 @@
 window_width = 400
 window_height = 240
 
+use_crank = true
 crank_angle = 0
 crank_step_amount = 2
-use_crank = true
+crank_paddle_vel = 0
+prev_crank_angle = 0
 
 ball_dim = {20,20}
 ball_angle = 0
@@ -52,22 +54,30 @@ paddle_pos = {
 }
 
 function handle_continuous_input()
-  if love.keyboard.isDown('right') then
-    paddle_speed = 4
-    crank_angle = crank_angle + crank_step_amount
-    if (crank_angle >= 360) then crank_angle = 0 end
-  end
-  if love.keyboard.isDown('left') then
-    paddle_speed = -4
-    crank_angle = crank_angle - crank_step_amount
-    if (crank_angle <= -1) then crank_angle = 359 end
-  end
   if love.keyboard.isDown('a') then
     ball_angle = ball_angle - ball_rotation_speed
   end
   if love.keyboard.isDown('d') then
     ball_angle = ball_angle + ball_rotation_speed
   end
+
+  if love.keyboard.isDown('right') then
+    paddle_speed = 4
+    crank_angle = crank_angle + crank_step_amount
+    if (crank_angle >= 360) then crank_angle = 0 end
+    crank_paddle_vel = crank_angle - prev_crank_angle
+  elseif love.keyboard.isDown('left') then
+    paddle_speed = -4
+    crank_angle = crank_angle - crank_step_amount
+    if (crank_angle <= -1) then crank_angle = 359 end
+    crank_paddle_vel = crank_angle - prev_crank_angle
+  else
+    crank_paddle_vel = 0
+  end
+
+  print("prev: "..prev_crank_angle.."curr: "..crank_angle.."vel: "..crank_paddle_vel)
+  
+  prev_crank_angle = crank_angle
 end
 
 function handle_input(key)
@@ -111,7 +121,7 @@ function update_physics(dt)
   elseif (bottom_pos >= 400) then
     bottom_pos = -800
   end
-  print("bottom_pos " .. bottom_pos)
+  -- print("bottom_pos " .. bottom_pos)
 
   paddle_pos.bottom[1] = bottom_pos
   paddle_pos.left[2] = left_pos
@@ -144,19 +154,19 @@ function adjust_ball_velocity()
       if colliding_with_paddle then
         if (k == "bottom") then
           ball_vel[2] = -1 * ball_vel[2]
-          ball_vel[1] = ball_vel[1] + (paddle_vel[1] * ball_paddle_vel_transfer)
+          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
         end
         if (k == "top") then
           ball_vel[2] = -1 * ball_vel[2]
-          ball_vel[1] = ball_vel[1] + (paddle_vel[1] * ball_paddle_vel_transfer * -1)
+          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
         end
         if (k == "left") then
           ball_vel[1] = -1 * ball_vel[1]
-          ball_vel[2] = ball_vel[2] + (paddle_vel[1] * ball_paddle_vel_transfer)
+          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
         end
         if (k == "right") then
           ball_vel[1] = -1 * ball_vel[1]
-          ball_vel[2] = ball_vel[2] + (paddle_vel[1] * ball_paddle_vel_transfer * -1)
+          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
         end
         -- collided last frame, indicates a stuck ball, reset ball
         if (colliding_paddles[k]) then
