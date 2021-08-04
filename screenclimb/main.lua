@@ -4,7 +4,7 @@ window_height = 240
 
 use_crank = true
 crank_angle = 0
-crank_step_amount = 2
+crank_step_amount = 3
 crank_paddle_vel = 0
 prev_crank_angle = 0
 
@@ -19,20 +19,19 @@ ball_rotation_speed = 0.1
 ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
 colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
-paddle_width = 200
--- paddle_width = 270
--- paddle_width = 130
--- paddle_width = 215
-paddle_height = 20
 paddle_speed = 0
 paddle_vel = {0,0}
 paddle_vel_max = 10
+paddle_decrease_amount = 10
+paddle_width = 200
+paddle_height = 20
 paddle_dim = {
   bottom = {paddle_width,paddle_height},
   left = {paddle_height,paddle_width},
   right = {paddle_height,paddle_width},
   top = {paddle_width,paddle_height}
 }
+
 paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
 paddle_pos = {
   bottom = { -- bottom center
@@ -75,8 +74,6 @@ function handle_continuous_input()
     crank_paddle_vel = 0
   end
 
-  print("prev: "..prev_crank_angle.."curr: "..crank_angle.."vel: "..crank_paddle_vel)
-  
   prev_crank_angle = crank_angle
 end
 
@@ -86,7 +83,7 @@ function handle_input(key)
     paddle_vel = {0, 0}
     ball_vel = {0, 0}
   elseif key == 'return' then
-    ball_vel = {0, 2}
+    ball_vel = use_crank and {2, 0} or {0, 2}
   elseif key == "escape" then
     love.event.quit()
   end
@@ -152,6 +149,9 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
+        paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
+        -- paddle_pos.bottom[1] = paddle_pos.bottom[1] - (paddle_decrease_amount * 5)
+        adjust_paddle_size()
         if (k == "bottom") then
           ball_vel[2] = -1 * ball_vel[2]
           ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
@@ -192,6 +192,15 @@ function adjust_ball_velocity()
   if (ball_vel[2] > ball_vel_max) then
     ball_vel[2] = ball_vel_max
   end
+end
+
+function adjust_paddle_size()
+  paddle_dim = {
+    bottom = {paddle_width,paddle_height},
+    left = {paddle_height,paddle_width},
+    right = {paddle_height,paddle_width},
+    top = {paddle_width,paddle_height}
+  }
 end
 
 function adjust_paddle_velocity(dt)
