@@ -3,7 +3,7 @@ window_width = 400
 window_height = 240
 
 crank_angle = 0
-crank_step_amount = 5
+crank_step_amount = 2
 use_crank = true
 
 ball_dim = {20,20}
@@ -46,28 +46,36 @@ paddle_pos = {
   }
 }
 
+function handle_continuous_input()
+  if love.keyboard.isDown('right') then
+    paddle_speed = 4
+    crank_angle = crank_angle + crank_step_amount
+    if (crank_angle >= 360) then crank_angle = 0 end
+  end
+  if love.keyboard.isDown('left') then
+    paddle_speed = -4
+    crank_angle = crank_angle - crank_step_amount
+    if (crank_angle <= -1) then crank_angle = 359 end
+  end
+  if love.keyboard.isDown('a') then
+    ball_angle = ball_angle - ball_rotation_speed
+  end
+  if love.keyboard.isDown('d') then
+    ball_angle = ball_angle + ball_rotation_speed
+  end
+end
+
 function handle_input(key)
-  if key == 'right' then
-      paddle_speed = 4
-      crank_angle = crank_angle + crank_step_amount
-      if (crank_angle >= 360) then crank_angle = 0 end
-    elseif key == 'left' then
-      paddle_speed = -4
-      crank_angle = crank_angle - crank_step_amount
-      if (crank_angle <= -1) then crank_angle = 359 end
-    elseif key == 'space' then
-      paddle_speed = 0
-      paddle_vel = {0, 0}
-      ball_vel = {0, 0}
-    elseif key == 'return' then
-      ball_vel = {0, 2}
-    elseif key == 'a' then
-      ball_angle = ball_angle - ball_rotation_speed
-    elseif key == 'd' then
-      ball_angle = ball_angle + ball_rotation_speed
-    elseif key == "escape" then
-      love.event.quit()
-    end
+  if key == 'space' then
+    paddle_speed = 0
+    paddle_vel = {0, 0}
+    ball_vel = {0, 0}
+  elseif key == 'return' then
+    ball_vel = {0, 2}
+  elseif key == "escape" then
+    love.event.quit()
+  end
+  -- prev_key = key
 end
   
 function update_physics(dt)
@@ -213,7 +221,7 @@ end
 
 -- SYSTEM
 function love.load()
-  love.keyboard.setKeyRepeat(true, 0)
+  love.keyboard.setKeyRepeat(true)
   love.window.setMode(window_width, window_height)
 end
 
@@ -223,6 +231,7 @@ function love.draw()
 end
 
 function love.update(dt)
+  handle_continuous_input()
   visible_paddles = get_visible_paddles()
   update_physics(dt)
 end
