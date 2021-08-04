@@ -1,58 +1,61 @@
--- playdate screen resolution
-window_width = 400
-window_height = 240
+function init_game()
+  -- playdate screen resolution
+  window_width = 400
+  window_height = 240
 
-use_crank = true
-crank_angle = 0
-crank_step_amount = 3
-crank_paddle_vel = 0
-prev_crank_angle = 0
+  use_crank = true
+  crank_angle = 0
+  crank_step_amount = 3
+  -- crank_step_amount = 1
+  crank_paddle_vel = 0
+  prev_crank_angle = 0
 
-ball_dim = {20,20}
-ball_angle = 0
-ball_vel_initial = {0,0}
-ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
-ball_pos = ball_pos_initial
-ball_vel = ball_vel_initial
-ball_vel_max = 5
-ball_rotation_speed = 0.1
-ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
-colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
+  ball_dim = {20,20}
+  ball_angle = 0
+  ball_vel_initial = {0,0}
+  ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
+  ball_pos = ball_pos_initial
+  ball_vel = ball_vel_initial
+  ball_vel_max = 5
+  ball_rotation_speed = 0.1
+  ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
+  colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
-paddle_speed = 0
-paddle_vel = {0,0}
-paddle_vel_max = 10
-paddle_decrease_amount = 10
-paddle_decreases = 0
-original_paddle_width = 200
-paddle_width = original_paddle_width
-paddle_height = 20
-paddle_dim = {
-  bottom = {paddle_width,paddle_height},
-  left = {paddle_height,paddle_width},
-  right = {paddle_height,paddle_width},
-  top = {paddle_width,paddle_height}
-}
-
-paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
-paddle_pos = {
-  bottom = { -- bottom center
-    (window_width / 2) - (paddle_dim.bottom[1] / 2),
-    window_height - paddle_dim.bottom[2]
-  },
-  left = {
-    0,
-    window_height - paddle_dim.left[2]
-  },
-  right = {
-    window_width - paddle_dim.right[1],
-    0
-  },
-  top = {
-    0,
-    0
+  paddle_speed = 0
+  paddle_vel = {0,0}
+  paddle_vel_max = 10
+  paddle_decrease_amount = 10
+  paddle_decreases = 0
+  original_paddle_width = 200
+  paddle_width = original_paddle_width
+  paddle_height = 20
+  paddle_dim = {
+    bottom = {paddle_width,paddle_height},
+    left = {paddle_height,paddle_width},
+    right = {paddle_height,paddle_width},
+    top = {paddle_width,paddle_height}
   }
-}
+
+  paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
+  paddle_pos = {
+    bottom = { -- bottom center
+      (window_width / 2) - (paddle_dim.bottom[1] / 2),
+      window_height - paddle_dim.bottom[2]
+    },
+    left = {
+      0,
+      window_height - paddle_dim.left[2]
+    },
+    right = {
+      window_width - paddle_dim.right[1],
+      0
+    },
+    top = {
+      0,
+      0
+    }
+  }
+end
 
 function handle_continuous_input()
   if love.keyboard.isDown('a') then
@@ -86,6 +89,8 @@ function handle_input(key)
     ball_vel = {0, 0}
   elseif key == 'return' then
     ball_vel = use_crank and {2, 0} or {0, 2}
+  elseif key == 'r' then
+    init_game()
   elseif key == "escape" then
     love.event.quit()
   end
@@ -121,7 +126,6 @@ function update_physics(dt)
   elseif (bottom_pos >= 400) then
     bottom_pos = -800
   end
-  -- print("bottom_pos " .. bottom_pos)
 
   paddle_pos.bottom[1] = bottom_pos
   paddle_pos.left[2] = left_pos
@@ -156,7 +160,7 @@ function adjust_ball_velocity()
 
       if colliding_with_paddle then
         if (paddle_width == paddle_height) then
-          paddle_width = original_paddle_width
+          init_game()
         else
           paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
           paddle_decreases = paddle_decreases + 1
@@ -185,7 +189,6 @@ function adjust_ball_velocity()
           ball_vel = ball_vel_initial
         end
       end
-print(object_to_string(ball_vel))
       colliding_paddles[k] = colliding_with_paddle
     end
   end
@@ -241,13 +244,13 @@ end
 
 function get_visible_paddles()
   local bottom =
-    paddle_pos.bottom[1] <= 380 and paddle_pos.bottom[1] >= -180
+    paddle_pos.bottom[1] <= 380 and paddle_pos.bottom[1] >= -(paddle_width - paddle_height)
   local left =
-    paddle_pos.left[2] <= 220 and paddle_pos.left[2] >= -180
+    paddle_pos.left[2] <= 220 and paddle_pos.left[2] >= -(paddle_width - paddle_height)
   local right =
-  paddle_pos.right[2] <= 220 and paddle_pos.right[2] >= -180
+  paddle_pos.right[2] <= 220 and paddle_pos.right[2] >= -(paddle_width - paddle_height)
   local top =
-    paddle_pos.top[1] <= 380 and paddle_pos.top[1] >= - 180
+    paddle_pos.top[1] <= 380 and paddle_pos.top[1] >= - (paddle_width - paddle_height)
 
   return { bottom = bottom, left = left, right = right, top = top }
   -- return { bottom = true, left = true, right = true, top = true }
@@ -256,6 +259,7 @@ end
 
 -- SYSTEM
 function love.load()
+  init_game()
   love.keyboard.setKeyRepeat(true)
   love.window.setMode(window_width, window_height)
 end
