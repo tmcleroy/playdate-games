@@ -61,6 +61,9 @@ function init_game()
   }
 end
 
+
+-- INPUT
+
 function handle_continuous_input()
   if love.keyboard.isDown('a') then
     ball_angle = ball_angle - ball_rotation_speed
@@ -99,7 +102,10 @@ function handle_input(key)
     love.event.quit()
   end
 end
-  
+
+
+-- PHYSICS
+
 function update_physics(dt)
   -- ball
   adjust_ball_velocity(dt)
@@ -120,7 +126,6 @@ function update_physics(dt)
   local left_pos = paddle_pos.bottom[1] + (window_height - paddle_height)
   local right_pos = (window_width + paddle_height - paddle_diff ) - bottom_pos
   local top_pos = (bottom_pos >= -(window_width + paddle_diff) and -1 or 1) * math.abs(bottom_pos + (window_width + paddle_diff))
-
 
   if (bottom_pos <= -580) then
     right_pos = -200 - paddle_diff + math.abs(bottom_pos + 580)
@@ -226,15 +231,6 @@ function adjust_ball_velocity()
   end
 end
 
-function adjust_paddle_size()
-  paddle_dim = {
-    bottom = {paddle_width,paddle_height},
-    left = {paddle_height,paddle_width},
-    right = {paddle_height,paddle_width},
-    top = {paddle_width,paddle_height}
-  }
-end
-
 function adjust_paddle_velocity(dt)
   local new_paddle_vel = paddle_vel[1] + (paddle_speed * dt)
   
@@ -248,20 +244,13 @@ function adjust_paddle_velocity(dt)
   paddle_vel[1] = new_paddle_vel
 end
 
-function draw_ball()
-  drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
-end
-
-function draw_paddles()
-  for k, v in pairs(visible_paddles) do
-    if visible_paddles[k] then
-      love.graphics.rectangle("fill", paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2], paddle_border_radius)
-    end
-  end
-end
-
-function draw_score()
-  love.graphics.print(score, 5, 2)
+function adjust_paddle_size()
+  paddle_dim = {
+    bottom = {paddle_width,paddle_height},
+    left = {paddle_height,paddle_width},
+    right = {paddle_height,paddle_width},
+    top = {paddle_width,paddle_height}
+  }
 end
 
 function get_visible_paddles()
@@ -279,7 +268,27 @@ function get_visible_paddles()
 end
 
 
+-- DRAWING
+
+function draw_ball()
+  drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
+end
+
+function draw_paddles()
+  for k, v in pairs(visible_paddles) do
+    if visible_paddles[k] then
+      love.graphics.rectangle("fill", paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2], paddle_border_radius)
+    end
+  end
+end
+
+function draw_score()
+  love.graphics.print(score, 5, 2)
+end
+
+
 -- SYSTEM
+
 function love.load()
   init_game()
   love.graphics.setFont(love.graphics.newFont(18))
