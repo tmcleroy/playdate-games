@@ -271,7 +271,7 @@ end
 -- DRAWING
 
 function draw_ball()
-  drawRotatedRectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
+  draw_rotated_rectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
 end
 
 function draw_paddles()
@@ -341,7 +341,7 @@ end
 
 -- https://love2d.org/wiki/love.graphics.rectangle
 -- modified to rotate about the center of the rectangle
-function drawRotatedRectangle(mode, x, y, width, height, angle)
+function draw_rotated_rectangle(mode, x, y, width, height, angle)
 	-- We cannot rotate the rectangle directly, but we
 	-- can move and rotate the coordinate system.
 	love.graphics.push()
