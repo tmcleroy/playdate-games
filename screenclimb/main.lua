@@ -23,7 +23,9 @@ paddle_speed = 0
 paddle_vel = {0,0}
 paddle_vel_max = 10
 paddle_decrease_amount = 10
-paddle_width = 200
+paddle_decreases = 0
+original_paddle_width = 200
+paddle_width = original_paddle_width
 paddle_height = 20
 paddle_dim = {
   bottom = {paddle_width,paddle_height},
@@ -99,7 +101,8 @@ function update_physics(dt)
 
   local bottom_pos = use_crank
     and -- bottom_pos should range from -800 to 1200, convert the angle value to a number in that range
-      -800 + ((crank_angle / 359) * 1200)
+                                          -- move the paddle so it stays centered when its width decreases
+      -800 + ((crank_angle / 359) * 1200) + (paddle_decreases * (paddle_decrease_amount / 2))
     or
       paddle_pos.bottom[1] + paddle_vel[1]
 
@@ -132,12 +135,15 @@ function adjust_ball_velocity()
   local collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
   local collide_left = ball_pos[1] <= 0
   local collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  local small_rand_range = math.random(-10, 10) / 60
 
   if (collide_top or collide_bottom) then
-    ball_vel[2] = ball_vel[2] * -1
+    ball_vel[2] = ball_vel[2] * -1 + small_rand_range
+    ball_vel[1] = ball_vel[1] + small_rand_range
   end
   if (collide_left or collide_right) then
-    ball_vel[1] = ball_vel[1] * -1
+    ball_vel[1] = ball_vel[1] * -1  + small_rand_range
+    ball_vel[2] = ball_vel[2] + small_rand_range
   end
 
   -- paddle collision, only check collisions with visible paddles
@@ -149,24 +155,29 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
-        paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
-        -- paddle_pos.bottom[1] = paddle_pos.bottom[1] - (paddle_decrease_amount * 5)
+        if (paddle_width == paddle_height) then
+          paddle_width = original_paddle_width
+        else
+          paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
+          paddle_decreases = paddle_decreases + 1
+        end
         adjust_paddle_size()
         if (k == "bottom") then
-          ball_vel[2] = -1 * ball_vel[2]
-          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
+          --                               increase ball vel with each paddle hit
+          ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
+          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
         if (k == "top") then
-          ball_vel[2] = -1 * ball_vel[2]
-          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
+          ball_vel[2] = -1 * ball_vel[2] + math.abs(small_rand_range * 1.5)
+          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
         if (k == "left") then
-          ball_vel[1] = -1 * ball_vel[1]
-          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
+          ball_vel[1] = -1 * ball_vel[1] + math.abs(small_rand_range * 1.5)
+          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
         if (k == "right") then
-          ball_vel[1] = -1 * ball_vel[1]
-          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25))
+          ball_vel[1] = -1 * ball_vel[1] - math.abs(small_rand_range * 1.5)
+          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
         -- collided last frame, indicates a stuck ball, reset ball
         if (colliding_paddles[k]) then
@@ -174,7 +185,7 @@ function adjust_ball_velocity()
           ball_vel = ball_vel_initial
         end
       end
-
+print(object_to_string(ball_vel))
       colliding_paddles[k] = colliding_with_paddle
     end
   end
