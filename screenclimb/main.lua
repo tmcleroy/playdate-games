@@ -3,6 +3,8 @@ function init_game()
   window_width = 400
   window_height = 240
 
+  score = 0
+
   use_crank = true
   crank_angle = 0
   crank_step_amount = 3
@@ -12,6 +14,7 @@ function init_game()
 
   ball_dim = {20,20}
   ball_angle = 0
+  ball_angle_vel = 0
   ball_vel_initial = {0,0}
   ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
   ball_pos = ball_pos_initial
@@ -19,6 +22,7 @@ function init_game()
   ball_vel_max = 5
   ball_rotation_speed = 0.1
   ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
+  ball_paddle_rotation_transfer = 0.1 -- amount of paddle velocity to transfer to ball rotation on collision
   colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
   paddle_speed = 0
@@ -100,6 +104,7 @@ function update_physics(dt)
   -- ball
   adjust_ball_velocity(dt)
   ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
+  ball_angle = ball_angle + ball_angle_vel
 
   -- paddle
   adjust_paddle_velocity(dt)
@@ -139,7 +144,13 @@ function adjust_ball_velocity()
   local collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
   local collide_left = ball_pos[1] <= 0
   local collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
   local small_rand_range = math.random(-10, 10) / 60
+
+  if collided_with_wall then
+    init_game()
+    return
+  end
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1 + small_rand_range
@@ -159,13 +170,6 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
-        if (paddle_width == paddle_height) then
-          init_game()
-        else
-          paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
-          paddle_decreases = paddle_decreases + 1
-        end
-        adjust_paddle_size()
         if (k == "bottom") then
           --                               increase ball vel with each paddle hit
           ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
@@ -173,7 +177,7 @@ function adjust_ball_velocity()
         end
         if (k == "top") then
           ball_vel[2] = -1 * ball_vel[2] + math.abs(small_rand_range * 1.5)
-          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[1] = ball_vel[1] - (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
         if (k == "left") then
           ball_vel[1] = -1 * ball_vel[1] + math.abs(small_rand_range * 1.5)
@@ -181,13 +185,27 @@ function adjust_ball_velocity()
         end
         if (k == "right") then
           ball_vel[1] = -1 * ball_vel[1] - math.abs(small_rand_range * 1.5)
-          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[2] = ball_vel[2] - (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
         end
-        -- collided last frame, indicates a stuck ball, reset ball
+
+        -- transfer paddle velocity into ball rotation
+        ball_angle_vel = ball_angle_vel + (crank_paddle_vel / crank_step_amount) * small_rand_range * ball_paddle_rotation_transfer
+        -- collided last frame, indicates a stuck ball, reset game
         if (colliding_paddles[k]) then
           ball_pos = ball_pos_initial
           ball_vel = ball_vel_initial
+          init_game()
+          return
         end
+
+        if (paddle_width == paddle_height) then
+          init_game()
+        else
+          paddle_width = math.max(paddle_width - paddle_decrease_amount, paddle_height)
+          paddle_decreases = paddle_decreases + 1
+          score = score + 1
+        end
+        adjust_paddle_size()
       end
       colliding_paddles[k] = colliding_with_paddle
     end
@@ -242,6 +260,10 @@ function draw_paddles()
   end
 end
 
+function draw_score()
+  love.graphics.print(score, 5, 2)
+end
+
 function get_visible_paddles()
   local bottom =
     paddle_pos.bottom[1] <= 380 and paddle_pos.bottom[1] >= -(paddle_width - paddle_height)
@@ -260,6 +282,7 @@ end
 -- SYSTEM
 function love.load()
   init_game()
+  love.graphics.setFont(love.graphics.newFont(18))
   love.keyboard.setKeyRepeat(true)
   love.window.setMode(window_width, window_height)
 end
@@ -267,6 +290,7 @@ end
 function love.draw()
   draw_paddles()
   draw_ball()
+  draw_score()
 end
 
 function love.update(dt)
