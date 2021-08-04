@@ -17,14 +17,19 @@ ball_rotation_speed = 0.1
 ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
 colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
+paddle_width = 200
+-- paddle_width = 270
+-- paddle_width = 130
+-- paddle_width = 215
+paddle_height = 20
 paddle_speed = 0
 paddle_vel = {0,0}
 paddle_vel_max = 10
 paddle_dim = {
-  bottom = {200,20},
-  left = {20,200},
-  right = {20,200},
-  top = {200,20}
+  bottom = {paddle_width,paddle_height},
+  left = {paddle_height,paddle_width},
+  right = {paddle_height,paddle_width},
+  top = {paddle_width,paddle_height}
 }
 paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
 paddle_pos = {
@@ -75,7 +80,6 @@ function handle_input(key)
   elseif key == "escape" then
     love.event.quit()
   end
-  -- prev_key = key
 end
   
 function update_physics(dt)
@@ -86,20 +90,20 @@ function update_physics(dt)
   -- paddle
   adjust_paddle_velocity(dt)
 
-  -- local bottom_pos = paddle_pos.bottom[1] + paddle_vel[1]
   local bottom_pos = use_crank
     and -- bottom_pos should range from -800 to 1200, convert the angle value to a number in that range
       -800 + ((crank_angle / 359) * 1200)
     or
       paddle_pos.bottom[1] + paddle_vel[1]
 
-  local left_pos = paddle_pos.bottom[1] + 220
-  local right_pos = 420 - bottom_pos
-  local top_pos = (bottom_pos >= -400 and -1 or 1) * math.abs(bottom_pos + 400)
+  local paddle_diff = (paddle_width - (window_width / 2))
+  local left_pos = paddle_pos.bottom[1] + (window_height - paddle_height)
+  local right_pos = (window_width + paddle_height - paddle_diff ) - bottom_pos
+  local top_pos = (bottom_pos >= -(window_width + paddle_diff) and -1 or 1) * math.abs(bottom_pos + (window_width + paddle_diff))
 
-  -- when near the end of paddle cycle, position the right paddle to make the transition appear seamless
+
   if (bottom_pos <= -580) then
-    right_pos = -200 + math.abs(bottom_pos + 580)
+    right_pos = -200 - paddle_diff + math.abs(bottom_pos + 580)
   end
   -- seamless reset of bottom paddle position that controls all other paddle positions
   if (bottom_pos <= -800) then
@@ -107,6 +111,7 @@ function update_physics(dt)
   elseif (bottom_pos >= 400) then
     bottom_pos = -800
   end
+  print("bottom_pos " .. bottom_pos)
 
   paddle_pos.bottom[1] = bottom_pos
   paddle_pos.left[2] = left_pos
