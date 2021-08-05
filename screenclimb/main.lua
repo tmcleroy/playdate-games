@@ -4,6 +4,7 @@ function init_game()
   window_height = 240
 
   score = 0
+  score_increase_per_ball_rotation = 0.5
 
   use_crank = true
   crank_angle = 0
@@ -15,6 +16,7 @@ function init_game()
   ball_dim = {20,20}
   ball_angle = 0
   ball_angle_vel = 0
+  ball_angle_diff = 0 -- 0 - 64. 64 is a full rotation of the ball
   ball_vel_initial = {0,0}
   ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
   ball_pos = ball_pos_initial
@@ -105,12 +107,20 @@ end
 
 
 -- PHYSICS
-
 function update_physics(dt)
   -- ball
   adjust_ball_velocity(dt)
   ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
+  local prev_ball_angle = ball_angle
   ball_angle = ball_angle + ball_angle_vel
+  local ball_diff = math.abs(ball_angle - prev_ball_angle) * 10
+
+  ball_angle_diff = ball_angle_diff + ball_diff
+
+  if (ball_angle_diff >= 64) then
+    ball_angle_diff = 0
+    score = score + score_increase_per_ball_rotation
+  end
 
   -- paddle
   adjust_paddle_velocity(dt)
@@ -152,10 +162,11 @@ function adjust_ball_velocity()
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
   local small_rand_range = math.random(-10, 10) / 60
 
-  if collided_with_wall then
-    init_game()
-    return
-  end
+
+  -- if collided_with_wall then
+  --   init_game()
+  --   return
+  -- end
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1 + small_rand_range
@@ -195,6 +206,7 @@ function adjust_ball_velocity()
 
         -- transfer paddle velocity into ball rotation
         ball_angle_vel = ball_angle_vel + (crank_paddle_vel / crank_step_amount) * small_rand_range * ball_paddle_rotation_transfer
+
         -- collided last frame, indicates a stuck ball, reset game
         if (colliding_paddles[k]) then
           ball_pos = ball_pos_initial
