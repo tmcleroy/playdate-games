@@ -10,6 +10,8 @@ function init_game()
   score_increase_per_ball_rotation = 1
 
   use_crank = true
+  end_game_on_wall_collision = true
+
   crank_step_amount = 3 -- sane default crank mult
   -- crank_step_amount = 1 -- slow the crank to debug paddle positioning
   crank_angle = 0
@@ -167,7 +169,7 @@ function adjust_ball_velocity()
   local small_rand_range = math.random(-10, 10) / 60
 
 
-  if collided_with_wall then
+  if (collided_with_wall and end_game_on_wall_collision) then
     love.audio.play(boom_sound)
     init_game()
     return
