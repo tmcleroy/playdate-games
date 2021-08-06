@@ -27,9 +27,9 @@ function init_game()
   ball_dim = {20,20}
   ball_angle = 0
   ball_angle_vel = 0
-  ball_angle_diff = 0 -- 0 - 64. 64 is a full rotation of the ball
+  ball_angle_diff = 0
   ball_vel_initial = {0,0}
-  ball_pos_initial = {(window_dim[1] / 2) - (ball_dim[1] / 2), (window_dim[2] / 2) - (ball_dim[2] / 2)} -- center
+  ball_pos_initial = {(window_dim[1] / 2) - (ball_dim[1] / 2), (window_dim[2] / 2) - (ball_dim[2] / 2)} -- center of screen
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 5
@@ -45,9 +45,9 @@ function init_game()
   paddle_decrease_amount = 10 -- number of pixels to decrease the paddle width on ball collision
   paddle_decreases = 0 -- number of times the paddle size has been decreased due to collison with ball
 
-  original_paddle_width = 200
+  paddle_width_initial = 200
   paddle_height = 20
-  paddle_width = original_paddle_width
+  paddle_width = paddle_width_initial
   paddle_dim = {
     bottom = {paddle_width,paddle_height},
     left = {paddle_height,paddle_width},
