@@ -3,6 +3,8 @@ function init_game()
   window_width = 400
   window_height = 240
 
+  speed_mult = 75 -- value to multiply dt by for consistent game speed across devices
+
   score = 0
   score_increase_per_ball_rotation = 0.5
 
@@ -42,7 +44,7 @@ function init_game()
     top = {paddle_width,paddle_height}
   }
 
-  paddle_border_radius = paddle_dim.bottom[2] / 2 -- set to 0 to square it off
+  paddle_border_radius = 0 --paddle_height / 2 -- set to 0 to square it off
   paddle_pos = {
     bottom = { -- bottom center
       (window_width / 2) - (paddle_dim.bottom[1] / 2),
@@ -110,9 +112,9 @@ end
 function update_physics(dt)
   -- ball
   adjust_ball_velocity(dt)
-  ball_pos = {ball_pos[1] + ball_vel[1], ball_pos[2] + ball_vel[2]}
+  ball_pos = {ball_pos[1] + ball_vel[1] * dt * speed_mult, ball_pos[2] + ball_vel[2] * dt * speed_mult}
   local prev_ball_angle = ball_angle
-  ball_angle = ball_angle + ball_angle_vel
+  ball_angle = ball_angle + ball_angle_vel * dt * speed_mult
   local ball_diff = math.abs(ball_angle - prev_ball_angle) * 10
 
   ball_angle_diff = ball_angle_diff + ball_diff
