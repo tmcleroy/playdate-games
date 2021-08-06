@@ -10,7 +10,7 @@ function init_game()
   speed_mult = 75 -- value to multiply dt by for consistent game speed across devices
 
   score = 0
-  score_increase_per_ball_rotation = 0.5
+  score_increase_per_ball_rotation = 1
 
   use_crank = true
   crank_angle = 0
@@ -121,11 +121,11 @@ function update_physics(dt)
   ball_angle = ball_angle + ball_angle_vel * dt * speed_mult
   local ball_diff = math.abs(ball_angle - prev_ball_angle) * 10
 
-  -- increase score by 0.10 every tenth of a rotation for a total of one point per full rotation
+  -- increase score every tenth of a rotation for a total of score_increase_per_ball_rotation points per full rotation
   ball_angle_diff = (ball_angle_diff + ball_diff * 10)
   if (ball_angle_diff >= 64) then
     ball_angle_diff = 0
-    score = score + 0.10
+    score = score + score_increase_per_ball_rotation / 10
     love.audio.play(plink_sound)
   end
 
