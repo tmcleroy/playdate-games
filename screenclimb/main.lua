@@ -1,21 +1,18 @@
+-- INIT
+
 function init_game()
-  -- playdate screen resolution
-  window_width = 400
-  window_height = 240
+  init_sounds()
+  window_dim = {400, 240} -- playdate screen resolution
 
-  boom_sound = love.audio.newSource("sound/boom.wav", "static")
-  ping_sound = love.audio.newSource("sound/ping.wav", "static")
-  plink_sound = love.audio.newSource("sound/plink.wav", "static")
-
-  speed_mult = 75 -- value to multiply dt by for consistent game speed across devices
+  speed_mult = 70 -- value to multiply dt by for consistent game speed across devices
 
   score = 0
   score_increase_per_ball_rotation = 1
 
   use_crank = true
+  crank_step_amount = 3 -- sane default crank mult
+  -- crank_step_amount = 1 -- slow the crank to debug paddle positioning
   crank_angle = 0
-  crank_step_amount = 3
-  -- crank_step_amount = 1
   crank_paddle_vel = 0
   prev_crank_angle = 0
 
@@ -24,7 +21,7 @@ function init_game()
   ball_angle_vel = 0
   ball_angle_diff = 0 -- 0 - 64. 64 is a full rotation of the ball
   ball_vel_initial = {0,0}
-  ball_pos_initial = {(window_width / 2) - (ball_dim[1] / 2), (window_height / 2) - (ball_dim[2] / 2)} -- center
+  ball_pos_initial = {(window_dim[1] / 2) - (ball_dim[1] / 2), (window_dim[2] / 2) - (ball_dim[2] / 2)} -- center
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 5
@@ -48,25 +45,25 @@ function init_game()
     top = {paddle_width,paddle_height}
   }
 
-  paddle_border_radius = 0 --paddle_height / 2 -- set to 0 to square it off
+  paddle_border_radius = 0 -- square
+  -- paddle_border_radius = paddle_height / 2 -- round
+
+  -- legacy: this needs another look. currently working but not sure how relevant these vars are
   paddle_pos = {
     bottom = { -- bottom center
-      (window_width / 2) - (paddle_dim.bottom[1] / 2),
-      window_height - paddle_dim.bottom[2]
+      (window_dim[1] / 2) - (paddle_dim.bottom[1] / 2),
+      window_dim[2] - paddle_dim.bottom[2]
     },
-    left = {
-      0,
-      window_height - paddle_dim.left[2]
-    },
-    right = {
-      window_width - paddle_dim.right[1],
-      0
-    },
-    top = {
-      0,
-      0
-    }
+    left = { 0, window_dim[2] - paddle_dim.left[2] },
+    right = { window_dim[1] - paddle_dim.right[1], 0 },
+    top = { 0, 0 }
   }
+end
+
+function init_sounds()
+  boom_sound = love.audio.newSource("sound/boom.wav", "static")
+  ping_sound = love.audio.newSource("sound/ping.wav", "static")
+  plink_sound = love.audio.newSource("sound/plink.wav", "static")
 end
 
 
@@ -139,10 +136,10 @@ function update_physics(dt)
     or
       paddle_pos.bottom[1] + paddle_vel[1]
 
-  local paddle_diff = (paddle_width - (window_width / 2))
-  local left_pos = paddle_pos.bottom[1] + (window_height - paddle_height)
-  local right_pos = (window_width + paddle_height - paddle_diff ) - bottom_pos
-  local top_pos = (bottom_pos >= -(window_width + paddle_diff) and -1 or 1) * math.abs(bottom_pos + (window_width + paddle_diff))
+  local paddle_diff = (paddle_width - (window_dim[1] / 2))
+  local left_pos = paddle_pos.bottom[1] + (window_dim[2] - paddle_height)
+  local right_pos = (window_dim[1] + paddle_height - paddle_diff ) - bottom_pos
+  local top_pos = (bottom_pos >= -(window_dim[1] + paddle_diff) and -1 or 1) * math.abs(bottom_pos + (window_dim[1] + paddle_diff))
 
   if (bottom_pos <= -580) then
     right_pos = -200 - paddle_diff + math.abs(bottom_pos + 580)
@@ -163,9 +160,9 @@ end
 function adjust_ball_velocity()
   -- wall collision
   local collide_top = ball_pos[2] <= 0
-  local collide_bottom = ball_pos[2] >= window_height - ball_dim[2]
+  local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
   local collide_left = ball_pos[1] <= 0
-  local collide_right = ball_pos[1] >= window_width - ball_dim[1]
+  local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
   local small_rand_range = math.random(-10, 10) / 60
 
@@ -314,7 +311,7 @@ function love.load()
   init_game()
   love.graphics.setFont(love.graphics.newFont(18))
   love.keyboard.setKeyRepeat(true)
-  love.window.setMode(window_width, window_height)
+  love.window.setMode(window_dim[1], window_dim[2])
 end
 
 function love.draw()
