@@ -2,22 +2,28 @@
 
 function init_game()
   init_sounds()
+  -- window
   window_dim = {400, 240} -- playdate screen resolution
 
-  speed_mult = 70 -- value to multiply dt by for consistent game speed across devices
-
-  score = 0
-  score_increase_per_ball_rotation = 1
-
+  -- feature bools
   use_crank = true
   end_game_on_wall_collision = true
 
-  crank_step_amount = 3 -- sane default crank mult
-  -- crank_step_amount = 1 -- slow the crank to debug paddle positioning
-  crank_angle = 0
-  crank_paddle_vel = 0
-  prev_crank_angle = 0
+  -- feature vals
+  speed_mult = 70 -- value to multiply dt by for consistent game speed across devices
 
+  -- score
+  score = 0
+  score_increase_per_ball_rotation = 1 -- number of points to increase score per full ball rotation
+
+  -- crank
+  crank_step_amount = 3 -- sane default crank multiplier
+  -- crank_step_amount = 1 -- slow the crank for debugging paddle positioning
+  crank_angle = 0
+  crank_paddle_vel = 0 -- used to calculate paddle velocity for transfering to rotation of ball
+  prev_crank_angle = 0 -- used to keep previous state for calculating crank_paddle_vel ^
+
+  -- ball
   ball_dim = {20,20}
   ball_angle = 0
   ball_angle_vel = 0
@@ -32,14 +38,16 @@ function init_game()
   ball_paddle_rotation_transfer = 0.1 -- amount of paddle velocity to transfer to ball rotation on collision
   colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
+  -- paddle
   paddle_speed = 0
-  paddle_vel = {0,0}
-  paddle_vel_max = 10
-  paddle_decrease_amount = 10
-  paddle_decreases = 0
+  paddle_vel = {0,0} -- deprecated
+  paddle_vel_max = 10 -- deprecated
+  paddle_decrease_amount = 10 -- number of pixels to decrease the paddle width on ball collision
+  paddle_decreases = 0 -- number of times the paddle size has been decreased due to collison with ball
+
   original_paddle_width = 200
-  paddle_width = original_paddle_width
   paddle_height = 20
+  paddle_width = original_paddle_width
   paddle_dim = {
     bottom = {paddle_width,paddle_height},
     left = {paddle_height,paddle_width},
