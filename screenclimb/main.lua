@@ -3,6 +3,10 @@ function init_game()
   window_width = 400
   window_height = 240
 
+  boom_sound = love.audio.newSource("sound/boom.wav", "static")
+  ping_sound = love.audio.newSource("sound/ping.wav", "static")
+  plink_sound = love.audio.newSource("sound/plink.wav", "static")
+
   speed_mult = 75 -- value to multiply dt by for consistent game speed across devices
 
   score = 0
@@ -122,6 +126,7 @@ function update_physics(dt)
   if (ball_angle_diff >= 64) then
     ball_angle_diff = 0
     score = score + 0.10
+    love.audio.play(plink_sound)
   end
 
   -- paddle
@@ -165,10 +170,11 @@ function adjust_ball_velocity()
   local small_rand_range = math.random(-10, 10) / 60
 
 
-  -- if collided_with_wall then
-  --   init_game()
-  --   return
-  -- end
+  if collided_with_wall then
+    love.audio.play(boom_sound)
+    init_game()
+    return
+  end
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1 + small_rand_range
@@ -188,6 +194,7 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
+        love.audio.play(ping_sound)
         if (k == "bottom") then
           --                               increase ball vel with each paddle hit
           ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
