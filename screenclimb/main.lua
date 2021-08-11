@@ -6,7 +6,8 @@ function init_game()
   window_dim = {400, 240} -- playdate screen resolution
 
   -- feature bools
-  use_crank = true
+  use_crank = true -- as opposed to smooth momentum mode
+  use_volume_knob = true -- use volume knob to approximate the crank, as opposed to the arrow keys
   end_game_on_wall_collision = true
 
   -- feature vals
@@ -17,7 +18,10 @@ function init_game()
   score_increase_per_ball_rotation = 1 -- number of points to increase score per full ball rotation
 
   -- crank
-  crank_step_amount = 3 -- sane default crank multiplier
+  crank_step_amount = 3
+  if use_volume_knob then
+    crank_step_amount = 6
+  end
   -- crank_step_amount = 1 -- slow the crank for debugging paddle positioning
   crank_angle = 0
   crank_paddle_vel = 0 -- used to calculate paddle velocity for transfering to rotation of ball
@@ -32,7 +36,7 @@ function init_game()
   ball_pos_initial = {(window_dim[1] / 2) - (ball_dim[1] / 2), (window_dim[2] / 2) - (ball_dim[2] / 2)} -- center of screen
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
-  ball_vel_max = 5
+  ball_vel_max = 3
   ball_rotation_speed = 0.1
   ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
   ball_paddle_rotation_transfer = 0.1 -- amount of paddle velocity to transfer to ball rotation on collision
@@ -87,24 +91,40 @@ function handle_continuous_input()
     ball_angle = ball_angle + ball_rotation_speed
   end
 
-  if love.keyboard.isDown('right') then
-    paddle_speed = 4
-    crank_angle = crank_angle + crank_step_amount
-    if (crank_angle >= 360) then crank_angle = 0 end
-    crank_paddle_vel = crank_angle - prev_crank_angle
-  elseif love.keyboard.isDown('left') then
-    paddle_speed = -4
-    crank_angle = crank_angle - crank_step_amount
-    if (crank_angle <= -1) then crank_angle = 359 end
-    crank_paddle_vel = crank_angle - prev_crank_angle
-  else
-    crank_paddle_vel = 0
+  if not use_volume_knob then -- arrow key control
+    if love.keyboard.isDown('right') then
+      paddle_speed = 4
+      crank_angle = crank_angle + crank_step_amount
+      if (crank_angle >= 360) then crank_angle = 0 end
+      crank_paddle_vel = crank_angle - prev_crank_angle
+    elseif love.keyboard.isDown('left') then
+      paddle_speed = -4
+      crank_angle = crank_angle - crank_step_amount
+      if (crank_angle <= -1) then crank_angle = 359 end
+      crank_paddle_vel = crank_angle - prev_crank_angle
+    else
+      crank_paddle_vel = 0
+    end
+    prev_crank_angle = crank_angle
   end
-
-  prev_crank_angle = crank_angle
 end
 
 function handle_input(key)
+  if use_volume_knob then -- volume knob control emulating paddle
+    if key == 'right' then
+      paddle_speed = 4
+      crank_angle = crank_angle + crank_step_amount
+      if (crank_angle >= 360) then crank_angle = 0 end
+      crank_paddle_vel = crank_angle - prev_crank_angle
+    elseif key == 'left' then
+      paddle_speed = -4
+      crank_angle = crank_angle - crank_step_amount
+      if (crank_angle <= -1) then crank_angle = 359 end
+      crank_paddle_vel = crank_angle - prev_crank_angle
+    end
+    prev_crank_angle = crank_angle
+  end
+
   if key == 'space' then
     paddle_speed = 0
     paddle_vel = {0, 0}
@@ -154,11 +174,13 @@ function update_physics(dt)
   if (bottom_pos <= -580) then
     right_pos = -200 - paddle_diff + math.abs(bottom_pos + 580)
   end
-  -- seamless reset of bottom paddle position that controls all other paddle positions
-  if (bottom_pos <= -800) then
-    bottom_pos = 400
-  elseif (bottom_pos >= 400) then
-    bottom_pos = -800
+  -- needed for seamless reset of bottom paddle position that controls all other paddle positions
+  if not use_crank then
+    if (bottom_pos < -800) then
+      bottom_pos = 400
+    elseif (bottom_pos > 400) then
+      bottom_pos = -800
+    end
   end
 
   paddle_pos.bottom[1] = bottom_pos
