@@ -305,13 +305,13 @@ end
 
 function get_visible_paddles()
   local bottom =
-    paddle_pos.bottom[1] <= 380 and paddle_pos.bottom[1] >= -(paddle_width - paddle_height)
+    paddle_pos.bottom[1] <= (window_dim[1] - paddle_height) and paddle_pos.bottom[1] >= -(paddle_width - paddle_height)
   local left =
-    paddle_pos.left[2] <= 220 and paddle_pos.left[2] >= -(paddle_width - paddle_height)
+    paddle_pos.left[2] <= (window_dim[2] - paddle_height) and paddle_pos.left[2] >= -(paddle_width - paddle_height)
   local right =
-  paddle_pos.right[2] <= 220 and paddle_pos.right[2] >= -(paddle_width - paddle_height)
+  paddle_pos.right[2] <= (window_dim[2] - paddle_height) and paddle_pos.right[2] >= -(paddle_width - paddle_height)
   local top =
-    paddle_pos.top[1] <= 380 and paddle_pos.top[1] >= - (paddle_width - paddle_height)
+    paddle_pos.top[1] <= (window_dim[1] - paddle_height) and paddle_pos.top[1] >= - (paddle_width - paddle_height)
 
   return { bottom = bottom, left = left, right = right, top = top }
   -- return { bottom = true, left = true, right = true, top = true }
