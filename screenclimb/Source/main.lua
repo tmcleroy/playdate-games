@@ -197,14 +197,12 @@ function adjust_ball_velocity()
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
       local colliding_with_paddle = colliding(
-        ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
+        ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
 
       if colliding_with_paddle then
         -- love.audio.play(ping_sound)
-        print("AMOUNT")
-        print(crank_step_amount)
         if (k == "bottom") then
           --                               increase ball vel with each paddle hit
           ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
