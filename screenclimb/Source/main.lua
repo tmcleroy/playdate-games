@@ -2,6 +2,7 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 
 local gfx <const> = playdate.graphics
+local sound <const> = playdate.sound
 
 
 -- INIT
@@ -83,9 +84,9 @@ function init_game()
 end
 
 function init_sounds()
-  -- boom_sound = love.audio.newSource("sound/boom.wav", "static")
-  -- ping_sound = love.audio.newSource("sound/ping.wav", "static")
-  -- plink_sound = love.audio.newSource("sound/plink.wav", "static")
+  boom_sound = sound.sampleplayer.new("sound/boom.wav")
+  ping_sound = sound.sampleplayer.new("sound/ping.wav")
+  plink_sound = sound.sampleplayer.new("sound/plink.wav")
 end
 
 
@@ -132,7 +133,7 @@ function update_physics(dt)
   if (ball_angle_diff >= 64) then
     ball_angle_diff = 0
     score = score + score_increase_per_ball_rotation / 10
-    -- playdate.audio.play(plink_sound)
+    sound.sampleplayer.play(plink_sound)
   end
 
   -- paddle
@@ -179,7 +180,7 @@ function adjust_ball_velocity()
 
 
   if (collided_with_wall and end_game_on_wall_collision) then
-    -- playdate.audio.play(boom_sound)
+    sound.sampleplayer.play(boom_sound)
     init_game()
     return
   end
@@ -202,7 +203,7 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
-        -- love.audio.play(ping_sound)
+        sound.sampleplayer.play(ping_sound)
         if (k == "bottom") then
           --                               increase ball vel with each paddle hit
           ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
