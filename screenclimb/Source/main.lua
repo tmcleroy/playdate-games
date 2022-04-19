@@ -1,13 +1,21 @@
+import "CoreLibs/graphics"
+import "CoreLibs/sprites"
+
+local gfx <const> = playdate.graphics
+
+
 -- INIT
 
 function init_game()
   init_sounds()
+  frame_rate = 50
+  
   -- window
   window_dim = {400, 240} -- playdate screen resolution
 
   -- feature bools
   use_crank = true -- as opposed to smooth momentum mode
-  use_volume_knob = true -- use volume knob to approximate the crank, as opposed to the arrow keys
+  use_volume_knob = false -- use volume knob to approximate the crank, as opposed to the arrow keys
   end_game_on_wall_collision = true
 
   -- feature vals
@@ -59,8 +67,8 @@ function init_game()
     top = {paddle_width,paddle_height}
   }
 
-  paddle_border_radius = 0 -- square
-  -- paddle_border_radius = paddle_height / 2 -- round
+  -- paddle_border_radius = 0 -- square
+  paddle_border_radius = paddle_height / 2 -- round
 
   -- legacy: this needs another look. currently working but not sure how relevant these vars are
   paddle_pos = {
@@ -75,29 +83,29 @@ function init_game()
 end
 
 function init_sounds()
-  boom_sound = love.audio.newSource("sound/boom.wav", "static")
-  ping_sound = love.audio.newSource("sound/ping.wav", "static")
-  plink_sound = love.audio.newSource("sound/plink.wav", "static")
+  -- boom_sound = love.audio.newSource("sound/boom.wav", "static")
+  -- ping_sound = love.audio.newSource("sound/ping.wav", "static")
+  -- plink_sound = love.audio.newSource("sound/plink.wav", "static")
 end
 
 
--- INPUT
+-- -- INPUT
 
 function handle_continuous_input()
-  if love.keyboard.isDown('a') then
-    ball_angle = ball_angle - ball_rotation_speed
+  if playdate.buttonIsPressed(playdate.kButtonA) then
+    ball_vel[1] = 1
   end
-  if love.keyboard.isDown('d') then
-    ball_angle = ball_angle + ball_rotation_speed
+  if playdate.buttonIsPressed(playdate.kButtonB) then
+    ball_vel[2] = 1
   end
 
   if not use_volume_knob then -- arrow key control
-    if love.keyboard.isDown('right') then
+    if playdate.buttonIsPressed(playdate.kButtonRight) then
       paddle_speed = 4
       crank_angle = crank_angle + crank_step_amount
       if (crank_angle >= 360) then crank_angle = 0 end
       crank_paddle_vel = crank_angle - prev_crank_angle
-    elseif love.keyboard.isDown('left') then
+    elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
       paddle_speed = -4
       crank_angle = crank_angle - crank_step_amount
       if (crank_angle <= -1) then crank_angle = 359 end
@@ -106,35 +114,6 @@ function handle_continuous_input()
       crank_paddle_vel = 0
     end
     prev_crank_angle = crank_angle
-  end
-end
-
-function handle_input(key)
-  if use_volume_knob then -- volume knob control emulating paddle
-    if key == 'right' then
-      paddle_speed = 4
-      crank_angle = crank_angle + crank_step_amount
-      if (crank_angle >= 360) then crank_angle = 0 end
-      crank_paddle_vel = crank_angle - prev_crank_angle
-    elseif key == 'left' then
-      paddle_speed = -4
-      crank_angle = crank_angle - crank_step_amount
-      if (crank_angle <= -1) then crank_angle = 359 end
-      crank_paddle_vel = crank_angle - prev_crank_angle
-    end
-    prev_crank_angle = crank_angle
-  end
-
-  if key == 'space' then
-    paddle_speed = 0
-    paddle_vel = {0, 0}
-    ball_vel = {0, 0}
-  elseif key == 'return' then
-    ball_vel = use_crank and {2, 0} or {0, 2}
-  elseif key == 'r' then
-    init_game()
-  elseif key == "escape" then
-    love.event.quit()
   end
 end
 
@@ -153,7 +132,7 @@ function update_physics(dt)
   if (ball_angle_diff >= 64) then
     ball_angle_diff = 0
     score = score + score_increase_per_ball_rotation / 10
-    love.audio.play(plink_sound)
+    -- playdate.audio.play(plink_sound)
   end
 
   -- paddle
@@ -200,7 +179,7 @@ function adjust_ball_velocity()
 
 
   if (collided_with_wall and end_game_on_wall_collision) then
-    love.audio.play(boom_sound)
+    -- playdate.audio.play(boom_sound)
     init_game()
     return
   end
@@ -223,23 +202,25 @@ function adjust_ball_velocity()
       )
 
       if colliding_with_paddle then
-        love.audio.play(ping_sound)
+        -- love.audio.play(ping_sound)
+        print("AMOUNT")
+        print(crank_step_amount)
         if (k == "bottom") then
           --                               increase ball vel with each paddle hit
           ball_vel[2] = -1 * ball_vel[2] - math.abs(small_rand_range * 1.5)
-          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[1] = ball_vel[1] + (crank_paddle_vel / math.random(crank_step_amount - 1, crank_step_amount + 1)) + small_rand_range
         end
         if (k == "top") then
           ball_vel[2] = -1 * ball_vel[2] + math.abs(small_rand_range * 1.5)
-          ball_vel[1] = ball_vel[1] - (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[1] = ball_vel[1] - (crank_paddle_vel / math.random(crank_step_amount - 1, crank_step_amount + 1)) + small_rand_range
         end
         if (k == "left") then
           ball_vel[1] = -1 * ball_vel[1] + math.abs(small_rand_range * 1.5)
-          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[2] = ball_vel[2] + (crank_paddle_vel / math.random(crank_step_amount - 1, crank_step_amount + 1)) + small_rand_range
         end
         if (k == "right") then
           ball_vel[1] = -1 * ball_vel[1] - math.abs(small_rand_range * 1.5)
-          ball_vel[2] = ball_vel[2] - (crank_paddle_vel / math.random(crank_step_amount - 0.25, crank_step_amount + 0.25)) + small_rand_range
+          ball_vel[2] = ball_vel[2] - (crank_paddle_vel / math.random(crank_step_amount - 1, crank_step_amount + 1)) + small_rand_range
         end
 
         -- transfer paddle velocity into ball rotation
@@ -321,45 +302,52 @@ end
 -- DRAWING
 
 function draw_ball()
-  draw_rotated_rectangle("fill", ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
+  -- draw_rotated_rectangle(ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
+  gfx.fillRoundRect(ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
 end
 
 function draw_paddles()
   for k, v in pairs(visible_paddles) do
     if visible_paddles[k] then
-      love.graphics.rectangle("fill", paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2], paddle_border_radius)
+      gfx.fillRoundRect(paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2], paddle_border_radius)
     end
   end
 end
 
 function draw_score()
-  love.graphics.print(score, 5, 2)
+  gfx.drawText(score, 5, 2)
+end
+
+function draw_background()
+  gfx.setColor(gfx.kColorWhite)
+  gfx.fillRect(0, 0, window_dim[1], window_dim[2])
+  gfx.setBackgroundColor(gfx.kColorWhite)
+  gfx.setColor(gfx.kColorBlack)
 end
 
 
 -- SYSTEM
 
-function love.load()
+function load()
   init_game()
-  love.graphics.setFont(love.graphics.newFont(18))
-  love.keyboard.setKeyRepeat(true)
-  love.window.setMode(window_dim[1], window_dim[2])
+  playdate.display.setRefreshRate(frame_rate)
 end
 
-function love.draw()
+function draw()
+  draw_background()
   draw_paddles()
   draw_ball()
   draw_score()
 end
 
-function love.update(dt)
+load()
+
+function playdate.update()
+  dt = 1/frame_rate
   handle_continuous_input()
   visible_paddles = get_visible_paddles()
   update_physics(dt)
-end
-
-function love.keypressed(key)
-  handle_input(key)
+  draw()
 end
 
 
@@ -391,12 +379,14 @@ end
 
 -- https://love2d.org/wiki/love.graphics.rectangle
 -- modified to rotate about the center of the rectangle
-function draw_rotated_rectangle(mode, x, y, width, height, angle)
-	-- We cannot rotate the rectangle directly, but we
-	-- can move and rotate the coordinate system.
-	love.graphics.push()
-	love.graphics.translate(x, y)
-	love.graphics.rotate(angle)
-	love.graphics.rectangle(mode, -1*(width/2), -1*(height/2), width, height)
-	love.graphics.pop()
+function draw_rotated_rectangle(x, y, width, height, angle)
+	-- -- We cannot rotate the rectangle directly, but we
+	-- -- can move and rotate the coordinate system.
+	-- love.graphics.push()
+	-- love.graphics.translate(x, y)
+	-- love.graphics.rotate(angle)
+	-- love.graphics.rectangle(-1*(width/2), -1*(height/2), width, height)
+	-- love.graphics.pop()
 end
+
+init_game()
