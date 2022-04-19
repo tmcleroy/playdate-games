@@ -16,7 +16,7 @@ function init_game()
 
   -- feature bools
   use_crank = true -- as opposed to smooth momentum mode
-  use_volume_knob = false -- use volume knob to approximate the crank, as opposed to the arrow keys
+  use_real_crank = true -- use volume knob to approximate the crank, as opposed to the arrow keys
   end_game_on_wall_collision = true
 
   -- feature vals
@@ -28,7 +28,7 @@ function init_game()
 
   -- crank
   crank_step_amount = 3
-  if use_volume_knob then
+  if use_real_crank then
     crank_step_amount = 6
   end
   -- crank_step_amount = 1 -- slow the crank for debugging paddle positioning
@@ -37,6 +37,7 @@ function init_game()
   prev_crank_angle = 0 -- used to keep previous state for calculating crank_paddle_vel ^
 
   -- ball
+  ball_img = gfx.image.new('img/ball.png')
   ball_dim = {20,20}
   ball_angle = 0
   ball_angle_vel = 0
@@ -94,27 +95,15 @@ end
 
 function handle_continuous_input()
   if playdate.buttonIsPressed(playdate.kButtonA) then
-    ball_vel[1] = 1
+    ball_vel[1] = 2
   end
   if playdate.buttonIsPressed(playdate.kButtonB) then
-    ball_vel[2] = 1
+    ball_vel[2] = 2
   end
 
-  if not use_volume_knob then -- arrow key control
-    if playdate.buttonIsPressed(playdate.kButtonRight) then
-      paddle_speed = 4
-      crank_angle = crank_angle + crank_step_amount
-      if (crank_angle >= 360) then crank_angle = 0 end
-      crank_paddle_vel = crank_angle - prev_crank_angle
-    elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
-      paddle_speed = -4
-      crank_angle = crank_angle - crank_step_amount
-      if (crank_angle <= -1) then crank_angle = 359 end
-      crank_paddle_vel = crank_angle - prev_crank_angle
-    else
-      crank_paddle_vel = 0
-    end
-    prev_crank_angle = crank_angle
+  if use_real_crank then
+    crank_angle = playdate.getCrankPosition()
+    crank_paddle_vel = playdate.getCrankChange()
   end
 end
 
@@ -198,7 +187,7 @@ function adjust_ball_velocity()
   for k, v in pairs(visible_paddles) do
     if (visible_paddles[k]) then
       local colliding_with_paddle = colliding(
-        ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2],
+        ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2],
         paddle_pos[k][1], paddle_pos[k][2], paddle_dim[k][1], paddle_dim[k][2]
       )
 
@@ -301,8 +290,8 @@ end
 -- DRAWING
 
 function draw_ball()
-  -- draw_rotated_rectangle(ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
-  gfx.fillRoundRect(ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_dim[1], ball_dim[2], ball_angle)
+  ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_angle * 150)
+  print(ball_angle)
 end
 
 function draw_paddles()
@@ -374,18 +363,6 @@ function object_to_string(o)
   else
       return tostring(o)
   end
-end
-
--- https://love2d.org/wiki/love.graphics.rectangle
--- modified to rotate about the center of the rectangle
-function draw_rotated_rectangle(x, y, width, height, angle)
-	-- -- We cannot rotate the rectangle directly, but we
-	-- -- can move and rotate the coordinate system.
-	-- love.graphics.push()
-	-- love.graphics.translate(x, y)
-	-- love.graphics.rotate(angle)
-	-- love.graphics.rectangle(-1*(width/2), -1*(height/2), width, height)
-	-- love.graphics.pop()
 end
 
 init_game()
