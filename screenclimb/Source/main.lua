@@ -1,15 +1,41 @@
 import "CoreLibs/graphics"
-import "CoreLibs/sprites"
 
 local gfx <const> = playdate.graphics
 local sound <const> = playdate.sound
 
+-- UTIL
+
+-- https://love2d.org/forums/viewtopic.php?p=196465&sid=7893979c5233b13efed2f638e114ce87#p196465
+function colliding(x1,y1,w1,h1, x2,y2,w2,h2)
+  return (
+    x1 < x2+w2 and
+    x2 < x1+w1 and
+    y1 < y2+h2 and
+    y2 < y1+h1
+  )
+end
+
+-- https://www.codegrepper.com/code-examples/lua/lua+object+to+string
+function object_to_string(o)
+  if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+              if type(k) ~= 'number' then k = '"'..k..'"' end
+              s = s .. '['..k..'] = ' .. object_to_string(v) .. ','
+      end
+      return s .. '} '
+  else
+      return tostring(o)
+  end
+end
 
 -- INIT
 
 function init_game()
   init_sounds()
   frame_rate = 50
+
+  playdate.display.setRefreshRate(frame_rate)
   
   -- window
   window_dim = {400, 240} -- playdate screen resolution
@@ -90,10 +116,9 @@ function init_sounds()
   plink_sound = sound.sampleplayer.new("sound/plink.wav")
 end
 
+-- INPUT
 
--- -- INPUT
-
-function handle_continuous_input()
+function handle_input()
   if playdate.buttonIsPressed(playdate.kButtonA) then
     ball_vel[1] = 2
   end
@@ -107,8 +132,8 @@ function handle_continuous_input()
   end
 end
 
-
 -- PHYSICS
+
 function update_physics(dt)
   -- ball
   adjust_ball_velocity(dt)
@@ -286,12 +311,10 @@ function get_visible_paddles()
   -- return { bottom = true, left = true, right = true, top = true }
 end
 
-
 -- DRAWING
 
 function draw_ball()
   ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), ball_angle * 150)
-  print(ball_angle)
 end
 
 function draw_paddles()
@@ -313,14 +336,6 @@ function draw_background()
   gfx.setColor(gfx.kColorBlack)
 end
 
-
--- SYSTEM
-
-function load()
-  init_game()
-  playdate.display.setRefreshRate(frame_rate)
-end
-
 function draw()
   draw_background()
   draw_paddles()
@@ -328,41 +343,14 @@ function draw()
   draw_score()
 end
 
-load()
+-- SYSTEM
 
 function playdate.update()
-  dt = 1/frame_rate
-  handle_continuous_input()
   visible_paddles = get_visible_paddles()
-  update_physics(dt)
+  handle_input()
+  update_physics(1/frame_rate)
   draw()
 end
 
-
--- UTIL
-
--- https://love2d.org/forums/viewtopic.php?p=196465&sid=7893979c5233b13efed2f638e114ce87#p196465
-function colliding(x1,y1,w1,h1, x2,y2,w2,h2)
-  return (
-    x1 < x2+w2 and
-    x2 < x1+w1 and
-    y1 < y2+h2 and
-    y2 < y1+h1
-  )
-end
-
--- https://www.codegrepper.com/code-examples/lua/lua+object+to+string
-function object_to_string(o)
-  if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-              if type(k) ~= 'number' then k = '"'..k..'"' end
-              s = s .. '['..k..'] = ' .. object_to_string(v) .. ','
-      end
-      return s .. '} '
-  else
-      return tostring(o)
-  end
-end
 
 init_game()
