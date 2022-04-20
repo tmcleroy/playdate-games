@@ -7,8 +7,8 @@ SIM="Playdate Simulator"
 
 all: screenclimb.pdx
 
-screenclimb.pdx: Source/main.lua
-	$(SDKBIN)/pdc Source screenclimb.pdx
+screenclimb.pdx: src/main.lua
+	$(SDKBIN)/pdc src screenclimb.pdx
 
 clean:
 	rm -rf screenclimb.pdx
