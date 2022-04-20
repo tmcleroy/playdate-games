@@ -8,6 +8,8 @@ local sound <const> = playdate.sound
 
 function init_game()
   init_sounds()
+  init_sprites()
+  
   frame_rate = 50
 
   playdate.display.setRefreshRate(frame_rate)
@@ -16,8 +18,6 @@ function init_game()
   window_dim = {400, 240} -- playdate screen resolution
 
   -- feature bools
-  use_crank = true -- as opposed to smooth momentum mode
-  use_real_crank = true -- use volume knob to approximate the crank, as opposed to the arrow keys
   end_game_on_wall_collision = true
 
   -- feature vals
@@ -28,17 +28,11 @@ function init_game()
   score_increase_per_ball_rotation = 1 -- number of points to increase score per full ball rotation
 
   -- crank
-  crank_step_amount = 3
-  if use_real_crank then
-    crank_step_amount = 6
-  end
-  -- crank_step_amount = 1 -- slow the crank for debugging paddle positioning
+  crank_step_amount = 6
   crank_angle = 0
   crank_paddle_vel = 0 -- used to calculate paddle velocity for transfering to rotation of ball
-  prev_crank_angle = 0 -- used to keep previous state for calculating crank_paddle_vel ^
 
   -- ball
-  ball_img = gfx.image.new('img/ball.png')
   ball_dim = {20,20}
   ball_angle = 0
   ball_angle_vel = 0
@@ -48,15 +42,11 @@ function init_game()
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 3
-  ball_rotation_speed = 0.1
-  ball_paddle_vel_transfer = 0.33 -- percentage of paddle velocity to transfer to ball on collision
   ball_paddle_rotation_transfer = 0.1 -- amount of paddle velocity to transfer to ball rotation on collision
   colliding_paddles = {} -- track previous frame collisions so ball can be reset when it's stuck
 
   -- paddle
   paddle_speed = 0
-  paddle_vel = {0,0} -- deprecated
-  paddle_vel_max = 10 -- deprecated
   paddle_decrease_amount = 10 -- number of pixels to decrease the paddle width on ball collision
   paddle_decreases = 0 -- number of times the paddle size has been decreased due to collison with ball
 
@@ -73,7 +63,6 @@ function init_game()
   -- paddle_border_radius = 0 -- square
   paddle_border_radius = paddle_height / 2 -- round
 
-  -- legacy: this needs another look. currently working but not sure how relevant these vars are
   paddle_pos = {
     bottom = { -- bottom center
       (window_dim[1] / 2) - (paddle_dim.bottom[1] / 2),
@@ -85,6 +74,10 @@ function init_game()
   }
 end
 
+function init_sprites()
+  ball_img = gfx.image.new('img/ball.png')
+end
+
 function init_sounds()
   boom_sound = sound.sampleplayer.new("sound/boom.wav")
   ping_sound = sound.sampleplayer.new("sound/ping.wav")
@@ -94,17 +87,21 @@ end
 -- INPUT
 
 function handle_input()
-  if playdate.buttonIsPressed(playdate.kButtonA) then
-    ball_vel[1] = 2
-  end
-  if playdate.buttonIsPressed(playdate.kButtonB) then
+  if playdate.buttonIsPressed(playdate.kButtonDown) then
     ball_vel[2] = 2
   end
-
-  if use_real_crank then
-    crank_angle = playdate.getCrankPosition()
-    crank_paddle_vel = playdate.getCrankChange()
+  if playdate.buttonIsPressed(playdate.kButtonUp) then
+    ball_vel[2] = -2
   end
+  if playdate.buttonIsPressed(playdate.kButtonRight) then
+    ball_vel[1] = 2
+  end
+  if playdate.buttonIsPressed(playdate.kButtonLeft) then
+    ball_vel[1] = -2
+  end
+
+  crank_angle = playdate.getCrankPosition()
+  crank_paddle_vel = playdate.getCrankChange()
 end
 
 -- PHYSICS
@@ -125,15 +122,10 @@ function update_physics(dt)
     sound.sampleplayer.play(plink_sound)
   end
 
-  -- paddle
-  adjust_paddle_velocity(dt)
-
-  local bottom_pos = use_crank
-    and -- bottom_pos should range from -800 to 1200, convert the angle value to a number in that range
+  local bottom_pos =
+    -- bottom_pos should range from -800 to 1200, convert the angle value to a number in that range
                                           -- move the paddle so it stays centered when its width decreases
       -800 + ((crank_angle / 359) * 1200) + (paddle_decreases * (paddle_decrease_amount / 2))
-    or
-      paddle_pos.bottom[1] + paddle_vel[1]
 
   local paddle_diff = (paddle_width - (window_dim[1] / 2))
   local left_pos = paddle_pos.bottom[1] + (window_dim[2] - paddle_height)
@@ -142,14 +134,6 @@ function update_physics(dt)
 
   if (bottom_pos <= -580) then
     right_pos = -200 - paddle_diff + math.abs(bottom_pos + 580)
-  end
-  -- needed for seamless reset of bottom paddle position that controls all other paddle positions
-  if not use_crank then
-    if (bottom_pos < -800) then
-      bottom_pos = 400
-    elseif (bottom_pos > 400) then
-      bottom_pos = -800
-    end
   end
 
   paddle_pos.bottom[1] = bottom_pos
@@ -248,19 +232,6 @@ function adjust_ball_velocity()
   if (ball_vel[2] > ball_vel_max) then
     ball_vel[2] = ball_vel_max
   end
-end
-
-function adjust_paddle_velocity(dt)
-  local new_paddle_vel = paddle_vel[1] + (paddle_speed * dt)
-  
-  -- limit paddle velocity to max
-  if (new_paddle_vel < 0) then
-    new_paddle_vel = math.max(-1 * paddle_vel_max, new_paddle_vel)
-  elseif (new_paddle_vel > 0) then
-    new_paddle_vel = math.min(paddle_vel_max, new_paddle_vel)
-  end
-
-  paddle_vel[1] = new_paddle_vel
 end
 
 function adjust_paddle_size()
