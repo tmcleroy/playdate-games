@@ -36,6 +36,16 @@ function init_game()
   ball_vel = ball_vel_initial
   ball_vel_max = 3
 
+  total_zones = 0
+  zone_size = 20 -- pixels
+  zone_map = {}
+  for i = 0, window_dim[1], zone_size do
+    zone_map[i + 1] = {}
+    for j = 0, window_dim[2], zone_size do
+      zone_map[i + 1][j + 1] = 0
+      total_zones = total_zones + 1
+    end
+  end
 end
 
 function init_sprites()
@@ -68,6 +78,7 @@ function update_physics(dt)
     ball_vec[1] + crank_vec[1],
     ball_vec[2] + crank_vec[2]
   })
+  highlight_zones()
 end
 
 -- keep ball within playing area
@@ -87,11 +98,43 @@ function get_valid_ball_pos(ball_pos)
   return ball_pos
 end
 
+function highlight_zones()
+  for i = 0, window_dim[1], zone_size do
+    for j = 0, window_dim[2], zone_size do
+      if
+        ((ball_pos[1] >= i and ball_pos[1] <= i + zone_size) and (ball_pos[2] >= j and ball_pos[2] <= j + zone_size)) or
+        ((ball_pos[1] + ball_dim[1] >= i and ball_pos[1] + ball_dim[1] <= i +  zone_size) and (ball_pos[2] + ball_dim[2] >= j and ball_pos[2] + ball_dim[2] <= j + zone_size))
+      then
+        ball_img.draw(ball_img, i, j)
+        zone_map[i + 1][j + 1] = 1
+      end
+    end
+  end
+  set_score()
+end
+
+function set_score()
+  -- num_visited = 0
+  -- for i, map in ipairs(zone_map) do
+  --   for j, val in ipairs(map) do
+  --     print(i, j, "..", val)
+  --     if val == 1 then
+  --       num_visited = num_visited + 1
+  --     end
+  --     -- if map2[j] == 1 then
+  --     --   num_visited = num_visited + 1
+  --     --   print("visited" .. i, j)
+  --     -- end
+  --   end
+  -- end
+  -- score = (num_visited / total_zones * 100)
+end
+
 function handle_collisions()
   -- wall collision
   local collide_top = ball_pos[2] <= 0
   local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
-  local collide_left = ball_pos[1] <= 0
+  local collide_left = ball_pos[1]
   local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
 
@@ -140,8 +183,14 @@ function draw_background()
   gfx.setColor(gfx.kColorBlack)
 end
 
+function draw_score()
+  gfx.drawText(score .. "%", 5, 2)
+end
+
 function draw()
+  -- draw_background()
   draw_ball()
+  draw_score()
 end
 
 -- LIFECYCLE
