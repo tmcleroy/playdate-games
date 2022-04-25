@@ -39,6 +39,7 @@ function init_game()
   total_zones = 0
   zone_size = 10 -- pixels
   zone_map = {}
+  -- fill zone map 2d array with empty spaces (zeroes)
   for i = 0, window_dim[1], zone_size do
     zone_map[i + 1] = {}
     for j = 0, window_dim[2], zone_size do
@@ -89,15 +90,6 @@ function handle_collisions()
   local collide_left = ball_pos[1]
   local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
-
-  if (collide_top or collide_bottom) then
-    ball_vel[2] = ball_vel[2] * -1
-    ball_vel[1] = ball_vel[1]
-  end
-  if (collide_left or collide_right) then
-    ball_vel[1] = ball_vel[1] * -1
-    ball_vel[2] = ball_vel[2]
-  end
 
   -- limit to max vel
   if (ball_vel[1] < -1 * ball_vel_max) then
@@ -173,7 +165,7 @@ end
 
 function draw_ball()
   if prev_x and prev_y and prev_crank_angle then
-    -- prevent trails
+    -- white trails
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
   ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
