@@ -114,20 +114,15 @@ function highlight_zones()
 end
 
 function set_score()
-  -- num_visited = 0
-  -- for i, map in ipairs(zone_map) do
-  --   for j, val in ipairs(map) do
-  --     print(i, j, "..", val)
-  --     if val == 1 then
-  --       num_visited = num_visited + 1
-  --     end
-  --     -- if map2[j] == 1 then
-  --     --   num_visited = num_visited + 1
-  --     --   print("visited" .. i, j)
-  --     -- end
-  --   end
-  -- end
-  -- score = (num_visited / total_zones * 100)
+  local occupied_zones = 0
+  for i = 0, window_dim[1], zone_size do
+    for j = 0, window_dim[2], zone_size do
+      if zone_map[i + 1][j + 1] == 1 then
+        occupied_zones = occupied_zones + 1
+      end
+    end
+  end
+  score = math.ceil((occupied_zones / total_zones) * 100)
 end
 
 function handle_collisions()
@@ -184,6 +179,10 @@ function draw_background()
 end
 
 function draw_score()
+  gfx.setColor(gfx.kColorWhite)
+  gfx.fillRect(0, 0, 50, 20)
+  gfx.setBackgroundColor(gfx.kColorWhite)
+  gfx.setColor(gfx.kColorBlack)
   gfx.drawText(score .. "%", 5, 2)
 end
 
