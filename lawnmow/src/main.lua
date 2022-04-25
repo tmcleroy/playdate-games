@@ -49,19 +49,6 @@ end
 -- INPUT
 
 function handle_input()
-  -- if playdate.buttonIsPressed(playdate.kButtonDown) then
-  --   ball_vel[2] = 2
-  -- end
-  if playdate.buttonIsPressed(playdate.kButtonUp) then
-    ball_vel[2] = -2
-  end
-  -- if playdate.buttonIsPressed(playdate.kButtonRight) then
-  --   ball_vel[1] = 2
-  -- end
-  -- if playdate.buttonIsPressed(playdate.kButtonLeft) then
-  --   ball_vel[1] = -2
-  -- end
-
   crank_angle = playdate.getCrankPosition()
   crank_paddle_vel = playdate.getCrankChange()
 end
@@ -69,14 +56,35 @@ end
 -- PHYSICS
 
 function update_physics(dt)
-  -- ball
   handle_collisions(dt)
-  x_pos = ball_pos[1] + ball_vel[1] * dt * speed_mult
-  y_pos = ball_pos[2] + ball_vel[2] * dt * speed_mult
-  rad = math.rad(crank_angle - 90) -- convert crank_angle to radians
-  x_vec = math.cos(rad)
-  y_vec = math.sin(rad)
-  ball_pos = {x_pos + x_vec, y_pos + y_vec}
+  rad = math.rad(crank_angle - 90)
+  ball_vec = {
+    ball_pos[1] + ball_vel[1] * dt * speed_mult,
+    ball_pos[2] + ball_vel[2] * dt * speed_mult
+  }
+
+  crank_vec = {math.cos(rad), math.sin(rad)}
+  ball_pos = get_valid_ball_pos({
+    ball_vec[1] + crank_vec[1],
+    ball_vec[2] + crank_vec[2]
+  })
+end
+
+-- keep ball within playing area
+function get_valid_ball_pos(ball_pos)
+  if ball_pos[1] < 0 then
+    ball_pos[1] = 0
+  end
+  if ball_pos[1] > window_dim[1] - ball_dim[1] then
+    ball_pos[1] = window_dim[1] - ball_dim[1]
+  end
+  if ball_pos[2] < 0 then
+    ball_pos[2] = 0
+  end
+  if ball_pos[2] > window_dim[2] - ball_dim[2] then
+    ball_pos[2] = window_dim[2] - ball_dim[2]
+  end
+  return ball_pos
 end
 
 function handle_collisions()
@@ -86,7 +94,6 @@ function handle_collisions()
   local collide_left = ball_pos[1] <= 0
   local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
-
 
   if (collide_top or collide_bottom) then
     ball_vel[2] = ball_vel[2] * -1
@@ -116,6 +123,7 @@ end
 
 function draw_ball()
   if prev_x and prev_y and prev_crank_angle then
+    -- prevent trails
     -- white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
   ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
