@@ -37,7 +37,7 @@ function init_game()
   ball_vel_max = 3
 
   total_zones = 0
-  zone_size = 20 -- pixels
+  zone_size = 10 -- pixels
   zone_map = {}
   for i = 0, window_dim[1], zone_size do
     zone_map[i + 1] = {}
@@ -46,11 +46,13 @@ function init_game()
       total_zones = total_zones + 1
     end
   end
+  draw_zones()
 end
 
 function init_sprites()
   ball_img = gfx.image.new('img/ball.png')
   white_img = gfx.image.new('img/white.png')
+  grass_img = gfx.image.new('img/grass.png')
 end
 
 function init_sounds()
@@ -78,51 +80,6 @@ function update_physics(dt)
     ball_vec[1] + crank_vec[1],
     ball_vec[2] + crank_vec[2]
   })
-  highlight_zones()
-end
-
--- keep ball within playing area
-function get_valid_ball_pos(ball_pos)
-  if ball_pos[1] < 0 then
-    ball_pos[1] = 0
-  end
-  if ball_pos[1] > window_dim[1] - ball_dim[1] then
-    ball_pos[1] = window_dim[1] - ball_dim[1]
-  end
-  if ball_pos[2] < 0 then
-    ball_pos[2] = 0
-  end
-  if ball_pos[2] > window_dim[2] - ball_dim[2] then
-    ball_pos[2] = window_dim[2] - ball_dim[2]
-  end
-  return ball_pos
-end
-
-function highlight_zones()
-  for i = 0, window_dim[1], zone_size do
-    for j = 0, window_dim[2], zone_size do
-      if
-        ((ball_pos[1] >= i and ball_pos[1] <= i + zone_size) and (ball_pos[2] >= j and ball_pos[2] <= j + zone_size)) or
-        ((ball_pos[1] + ball_dim[1] >= i and ball_pos[1] + ball_dim[1] <= i +  zone_size) and (ball_pos[2] + ball_dim[2] >= j and ball_pos[2] + ball_dim[2] <= j + zone_size))
-      then
-        ball_img.draw(ball_img, i, j)
-        zone_map[i + 1][j + 1] = 1
-      end
-    end
-  end
-  set_score()
-end
-
-function set_score()
-  local occupied_zones = 0
-  for i = 0, window_dim[1], zone_size do
-    for j = 0, window_dim[2], zone_size do
-      if zone_map[i + 1][j + 1] == 1 then
-        occupied_zones = occupied_zones + 1
-      end
-    end
-  end
-  score = math.ceil((occupied_zones / total_zones) * 100)
 end
 
 function handle_collisions()
@@ -157,12 +114,67 @@ function handle_collisions()
   end
 end
 
+-- keep ball within playing area
+function get_valid_ball_pos(ball_pos)
+  if ball_pos[1] < 0 then
+    ball_pos[1] = 0
+  end
+  if ball_pos[1] > window_dim[1] - ball_dim[1] then
+    ball_pos[1] = window_dim[1] - ball_dim[1]
+  end
+  if ball_pos[2] < 0 then
+    ball_pos[2] = 0
+  end
+  if ball_pos[2] > window_dim[2] - ball_dim[2] then
+    ball_pos[2] = window_dim[2] - ball_dim[2]
+  end
+  return ball_pos
+end
+
+function update_zones()
+  for i = 0, window_dim[1], zone_size do
+    for j = 0, window_dim[2], zone_size do
+      if
+        ((ball_pos[1] >= i and ball_pos[1] <= i + zone_size) and (ball_pos[2] >= j and ball_pos[2] <= j + zone_size)) or
+        ((ball_pos[1] + ball_dim[1] >= i and ball_pos[1] + ball_dim[1] <= i + zone_size) and (ball_pos[2] + ball_dim[2] >= j and ball_pos[2] + ball_dim[2] <= j + zone_size)) or
+        ((ball_pos[1] + ball_dim[1] >= i and ball_pos[1] + ball_dim[1] <= i + (zone_size * (ball_dim[1] / zone_size))) and (ball_pos[2] + ball_dim[2] >= j and ball_pos[2] + ball_dim[2] <= j + (zone_size * (ball_dim[1] / zone_size))))
+      then
+        zone_map[i + 1][j + 1] = 1
+      end
+    end
+  end
+  set_score()
+end
+
+function set_score()
+  local occupied_zones = 0
+  for i = 0, window_dim[1], zone_size do
+    for j = 0, window_dim[2], zone_size do
+      if zone_map[i + 1][j + 1] == 1 then
+        occupied_zones = occupied_zones + 1
+      end
+    end
+  end
+  score = math.ceil((occupied_zones / total_zones) * 100)
+end
+
 -- DRAWING
+
+function draw_zones()
+  for i = 0, window_dim[1], zone_size do
+    for j = 0, window_dim[2], zone_size do
+      grass_img.drawScaled(grass_img, i, j, zone_size / ball_dim[1])
+      if zone_map[i + 1][j + 1] == 1 then
+        white_img.drawScaled(white_img, i, j, zone_size / ball_dim[1])
+      end
+    end
+  end
+end
 
 function draw_ball()
   if prev_x and prev_y and prev_crank_angle then
     -- prevent trails
-    -- white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
+    white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
   ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
   prev_x = ball_pos[1] + (ball_dim[1] / 2)
@@ -188,6 +200,7 @@ end
 
 function draw()
   -- draw_background()
+  -- draw_zones()
   draw_ball()
   draw_score()
 end
@@ -197,6 +210,8 @@ end
 function playdate.update()
   handle_input()
   update_physics(1/frame_rate)
+  update_zones()
+  set_score()
   draw()
 end
 
