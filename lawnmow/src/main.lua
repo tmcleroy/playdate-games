@@ -10,7 +10,7 @@ function init_game()
   init_sounds()
   init_sprites()
   
-  frame_rate = 50
+  frame_rate = 50 -- max refresh rate of playdate screen
 
   playdate.display.setRefreshRate(frame_rate)
   
@@ -27,6 +27,7 @@ function init_game()
   crank_step_amount = 6
   crank_angle = 0
   crank_paddle_vel = 0 -- used to calculate paddle velocity for transfering to rotation of ball
+  crank_angle_rot = 90
 
   -- ball
   ball_dim = {20,20}
@@ -70,7 +71,7 @@ end
 
 function update_physics(dt)
   handle_collisions(dt)
-  rad = math.rad(crank_angle - 90)
+  rad = math.rad(crank_angle - crank_angle_rot)
   ball_vec = {
     ball_pos[1] + ball_vel[1] * dt * speed_mult,
     ball_pos[2] + ball_vel[2] * dt * speed_mult
@@ -87,22 +88,12 @@ function handle_collisions()
   -- wall collision
   local collide_top = ball_pos[2] <= 0
   local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
-  local collide_left = ball_pos[1]
+  local collide_left = ball_pos[1] <= 0
   local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
 
-  -- limit to max vel
-  if (ball_vel[1] < -1 * ball_vel_max) then
-    ball_vel[1] = -1 * ball_vel_max
-  end
-  if (ball_vel[1] > ball_vel_max) then
-    ball_vel[1] = ball_vel_max
-  end
-  if (ball_vel[2] < -1 * ball_vel_max) then
-    ball_vel[2] = -1 * ball_vel_max
-  end
-  if (ball_vel[2] > ball_vel_max) then
-    ball_vel[2] = ball_vel_max
+  if (collided_with_wall) then
+    crank_angle_rot = crank_angle_rot * -1
   end
 end
 
