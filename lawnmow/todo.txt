@@ -1,0 +1,12 @@
+TODO
+
+render entire image as background
+speed adjustment via dpad
+time based scoring
+large object collision
+multiple levels
+bg music
+
+DONE
+
+set splash screen image
