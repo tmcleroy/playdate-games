@@ -33,11 +33,14 @@ function init_game()
   ball_pos = ball_pos_initial
   ball_vel = ball_vel_initial
   ball_vel_max = 3
+  ball_speed = 2
+  min_ball_speed = 1
+  max_ball_speed = 3
 
   init_sounds()
   init_sprites()
   init_zone_map()
-  draw_zones()
+  draw_bg()
 end
 
 function init_sprites()
@@ -45,6 +48,7 @@ function init_sprites()
   white_img = gfx.image.new('img/white.png')
   black_img = gfx.image.new('img/black.png')
   grass_img = gfx.image.new('img/grass.png')
+  fine_horizontal_stripes_img = gfx.image.new('img/fine_horizontal_stripes.png')
 end
 
 function init_sounds()
@@ -67,6 +71,13 @@ end
 -- INPUT
 
 function handle_input()
+  if playdate.buttonJustPressed(playdate.kButtonDown) then
+    ball_speed = math.max(ball_speed - 1, min_ball_speed)
+  end
+  if playdate.buttonJustPressed(playdate.kButtonUp) then
+    ball_speed = math.min(ball_speed + 1, max_ball_speed)
+  end
+
   crank_angle = playdate.getCrankPosition()
   crank_paddle_vel = playdate.getCrankChange()
 end
@@ -83,8 +94,8 @@ function update_physics(dt)
 
   crank_vec = {math.cos(rad), math.sin(rad)}
   ball_pos = get_valid_ball_pos({
-    ball_vec[1] + crank_vec[1],
-    ball_vec[2] + crank_vec[2]
+    ball_vec[1] + crank_vec[1]  * ball_speed,
+    ball_vec[2] + crank_vec[2]  * ball_speed
   })
 end
 
@@ -148,6 +159,10 @@ end
 
 -- DRAWING
 
+function draw_bg()
+  fine_horizontal_stripes_img.draw(fine_horizontal_stripes_img, 0, 0)
+end
+
 function draw_zones()
   for i = 0, window_dim[1], zone_size do
     for j = 0, window_dim[2], zone_size do
@@ -161,7 +176,7 @@ end
 
 function draw_ball()
   if prev_x and prev_y and prev_crank_angle then
-    -- white trails
+    -- draw white tile where lawnmower was previously to simulate grass being removed
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
   ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
@@ -171,7 +186,7 @@ function draw_ball()
 
 end
 
-function draw_background()
+function draw_white_bg()
   gfx.setColor(gfx.kColorWhite)
   gfx.fillRect(0, 0, window_dim[1], window_dim[2])
   gfx.setBackgroundColor(gfx.kColorWhite)
@@ -187,8 +202,6 @@ function draw_score()
 end
 
 function draw()
-  -- draw_background()
-  -- draw_zones()
   draw_ball()
   draw_score()
 end
