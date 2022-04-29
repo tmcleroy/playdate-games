@@ -7,9 +7,6 @@ local sound <const> = playdate.sound
 -- INIT
 
 function init_game()
-  init_sounds()
-  init_sprites()
-  
   frame_rate = 50 -- max refresh rate of playdate screen
 
   playdate.display.setRefreshRate(frame_rate)
@@ -37,6 +34,23 @@ function init_game()
   ball_vel = ball_vel_initial
   ball_vel_max = 3
 
+  init_sounds()
+  init_sprites()
+  init_zone_map()
+  draw_zones()
+end
+
+function init_sprites()
+  ball_img = gfx.image.new('img/ball.png')
+  white_img = gfx.image.new('img/white.png')
+  black_img = gfx.image.new('img/black.png')
+  grass_img = gfx.image.new('img/grass.png')
+end
+
+function init_sounds()
+end
+
+function init_zone_map()
   total_zones = 0
   zone_size = 10 -- pixels
   zone_map = {}
@@ -48,16 +62,6 @@ function init_game()
       total_zones = total_zones + 1
     end
   end
-  draw_zones()
-end
-
-function init_sprites()
-  ball_img = gfx.image.new('img/ball.png')
-  white_img = gfx.image.new('img/white.png')
-  grass_img = gfx.image.new('img/grass.png')
-end
-
-function init_sounds()
 end
 
 -- INPUT
@@ -93,7 +97,8 @@ function handle_collisions()
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
 
   if (collided_with_wall) then
-    crank_angle_rot = crank_angle_rot * -1
+    -- local rand = math.random(0, 50)
+    -- crank_angle_rot = (crank_angle_rot + rand) * -1
   end
 end
 
