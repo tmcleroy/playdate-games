@@ -106,11 +106,6 @@ function handle_collisions()
   local collide_left = ball_pos[1] <= 0
   local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
   local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
-
-  if (collided_with_wall) then
-    -- local rand = math.random(0, 50)
-    -- crank_angle_rot = (crank_angle_rot + rand) * -1
-  end
 end
 
 -- keep ball within playing area
@@ -183,7 +178,6 @@ function draw_ball()
   prev_x = ball_pos[1] + (ball_dim[1] / 2)
   prev_y = ball_pos[2] + (ball_dim[2] / 2)
   prev_crank_angle = crank_angle
-
 end
 
 function draw_white_bg()
@@ -196,14 +190,23 @@ end
 function draw_score()
   gfx.setColor(gfx.kColorWhite)
   gfx.fillRect(0, 0, 50, 20)
-  gfx.setBackgroundColor(gfx.kColorWhite)
-  gfx.setColor(gfx.kColorBlack)
   gfx.drawText(score .. "%", 5, 2)
 end
 
-function draw()
-  draw_ball()
+function draw_speed()
+  gfx.setColor(gfx.kColorWhite)
+  gfx.fillRect(window_dim[1] - 50, 0, 50, 20)
+  gfx.drawText("SPD: " .. ball_speed, window_dim[1] - 48, 2)
+end
+
+function draw_hud()
   draw_score()
+  draw_speed()
+end
+
+function draw()
+  draw_hud()
+  draw_ball()
 end
 
 -- LIFECYCLE
