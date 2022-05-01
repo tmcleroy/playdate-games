@@ -6,10 +6,20 @@ local sound <const> = playdate.sound
 
 -- INIT
 
+function init_game_state()
+  level = 1
+  max_level = 3
+  is_game_over = false
+  init_sounds()
+  init_sprites()
+  init_levels()
+end
+
 function init_game()
   frame_rate = 50 -- max refresh rate of playdate screen
 
   playdate.display.setRefreshRate(frame_rate)
+  playdate.resetElapsedTime()
   
   -- window
   window_dim = {400, 240} -- playdate screen resolution
@@ -37,10 +47,18 @@ function init_game()
   min_ball_speed = 1
   max_ball_speed = 3
 
-  init_sounds()
-  init_sprites()
   init_zone_map()
   draw_bg()
+end
+
+function reset()
+  init_game_state()
+  init_game()
+end
+
+function game_over()
+  is_game_over = true
+  draw_game_over()
 end
 
 function init_sprites()
@@ -49,9 +67,24 @@ function init_sprites()
   black_img = gfx.image.new('img/black.png')
   grass_img = gfx.image.new('img/grass.png')
   fine_horizontal_stripes_img = gfx.image.new('img/fine_horizontal_stripes.png')
+  thick_horizontal_stripes_img = gfx.image.new('img/thick_horizontal_stripes.png')
+  squiggles_img = gfx.image.new('img/squiggles.png')
 end
 
 function init_sounds()
+end
+
+function init_levels()
+  levels = {}
+  
+  levels[1] = {}
+  levels[1]['bg'] = fine_horizontal_stripes_img
+
+  levels[2] = {}
+  levels[2]['bg'] = thick_horizontal_stripes_img
+
+  levels[3] = {}
+  levels[3]['bg'] = squiggles_img
 end
 
 function init_zone_map()
@@ -76,6 +109,10 @@ function handle_input()
   end
   if playdate.buttonJustPressed(playdate.kButtonUp) then
     ball_speed = math.min(ball_speed + 1, max_ball_speed)
+  end
+
+  if (is_game_over == true and playdate.buttonJustPressed(playdate.kButtonA)) then
+    reset()
   end
 
   crank_angle = playdate.getCrankPosition()
@@ -155,7 +192,8 @@ end
 -- DRAWING
 
 function draw_bg()
-  fine_horizontal_stripes_img.draw(fine_horizontal_stripes_img, 0, 0)
+  draw_white_bg()
+  levels[level]['bg'].draw(levels[level]['bg'], 0, 0)
 end
 
 function draw_zones()
@@ -199,9 +237,31 @@ function draw_speed()
   gfx.drawText("SPD: " .. ball_speed, window_dim[1] - 48, 2)
 end
 
+function draw_time()
+  secs = math.floor(playdate.getElapsedTime())
+  width = 75
+  center = window_dim[1] - (window_dim[1] / 2) - (width / 2)
+  gfx.setColor(gfx.kColorWhite)
+  gfx.fillRect(center, 0, width, 20)
+  gfx.drawText("TIME: " .. secs, center + 4, 2)
+end
+
+function draw_level()
+  gfx.setColor(gfx.kColorWhite)
+  gfx.fillRect(window_dim[1] - 50, window_dim[2] - 20, 50, 20)
+  gfx.drawText("LVL: " .. level, window_dim[1] - 48, window_dim[2] - 18)
+end
+
+function draw_game_over()
+  draw_white_bg()
+  gfx.drawText("GAME OVER! Press A to reset", window_dim[1] - (window_dim[1] / 2) - 110, (window_dim[2] / 2) - 10)
+end
+
 function draw_hud()
   draw_score()
   draw_speed()
+  draw_time()
+  draw_level()
 end
 
 function draw()
@@ -211,12 +271,28 @@ end
 
 -- LIFECYCLE
 
-function playdate.update()
-  handle_input()
-  update_physics(1/frame_rate)
-  update_zones()
-  set_score()
-  draw()
+function update_game_state()
+  if (score == 100) then
+    level = level + 1
+    if level > max_level then
+      game_over()
+    else
+      init_game()
+    end
+  end
+  
 end
 
+function playdate.update()
+  handle_input()
+  if is_game_over == false then
+    update_physics(1/frame_rate)
+    update_zones()
+    set_score()
+    draw()  
+  end
+  update_game_state()
+end
+
+init_game_state()
 init_game()

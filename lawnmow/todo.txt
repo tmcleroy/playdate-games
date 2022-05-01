@@ -1,13 +1,14 @@
 TODO
 
-current speed indicator
-time based scoring
 large object collision
-multiple levels
 bg music
+fix white patch left behind on level transition bug
 
 DONE
 
 set splash screen image
 render entire image as background
 speed adjustment via dpad
+current speed indicator
+time based scoring
+multiple levels
