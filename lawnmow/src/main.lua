@@ -16,6 +16,7 @@ function init_game_state()
 end
 
 function init_game()
+  level_clear_percentage = 100 -- percentage of lawn mowed for a level to be complete
   frame_rate = 50 -- max refresh rate of playdate screen
 
   playdate.display.setRefreshRate(frame_rate)
@@ -33,7 +34,6 @@ function init_game()
   -- crank
   crank_step_amount = 6
   crank_angle = 0
-  crank_paddle_vel = 0 -- used to calculate paddle velocity for transfering to rotation of ball
   crank_angle_rot = 90
 
   -- ball
@@ -62,10 +62,14 @@ function game_over()
 end
 
 function init_sprites()
+  -- lawnmower
   ball_img = gfx.image.new('img/ball.png')
+  -- bg zone sprite, can be tiled to look like ugly grass
+  grass_img = gfx.image.new('img/grass.png')
+  -- colors
   white_img = gfx.image.new('img/white.png')
   black_img = gfx.image.new('img/black.png')
-  grass_img = gfx.image.new('img/grass.png')
+  -- level bg sprites
   fine_horizontal_stripes_img = gfx.image.new('img/fine_horizontal_stripes.png')
   thick_horizontal_stripes_img = gfx.image.new('img/thick_horizontal_stripes.png')
   squiggles_img = gfx.image.new('img/squiggles.png')
@@ -77,6 +81,7 @@ end
 function init_levels()
   levels = {}
   
+  -- is there a better way to do object literals in lua?
   levels[1] = {}
   levels[1]['bg'] = fine_horizontal_stripes_img
 
@@ -116,33 +121,35 @@ function handle_input()
   end
 
   crank_angle = playdate.getCrankPosition()
-  crank_paddle_vel = playdate.getCrankChange()
 end
 
 -- PHYSICS
 
+-- TODO see if dt usage matters here
 function update_physics(dt)
   handle_collisions(dt)
-  rad = math.rad(crank_angle - crank_angle_rot)
+  
   ball_vec = {
     ball_pos[1] + ball_vel[1] * dt * speed_mult,
     ball_pos[2] + ball_vel[2] * dt * speed_mult
   }
 
+  -- subtract crank_angle_rot so lawnmower sprite matches forward direction
+  rad = math.rad(crank_angle - crank_angle_rot)
   crank_vec = {math.cos(rad), math.sin(rad)}
   ball_pos = get_valid_ball_pos({
-    ball_vec[1] + crank_vec[1]  * ball_speed,
-    ball_vec[2] + crank_vec[2]  * ball_speed
+    ball_vec[1] + crank_vec[1] * ball_speed,
+    ball_vec[2] + crank_vec[2] * ball_speed
   })
 end
 
 function handle_collisions()
-  -- wall collision
-  local collide_top = ball_pos[2] <= 0
-  local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
-  local collide_left = ball_pos[1] <= 0
-  local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
-  local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
+  -- -- wall collision
+  -- local collide_top = ball_pos[2] <= 0
+  -- local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
+  -- local collide_left = ball_pos[1] <= 0
+  -- local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
+  -- local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
 end
 
 -- keep ball within playing area
@@ -272,7 +279,7 @@ end
 -- LIFECYCLE
 
 function update_game_state()
-  if (score == 100) then
+  if (score == level_clear_percentage) then
     level = level + 1
     if level > max_level then
       game_over()

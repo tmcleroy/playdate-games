@@ -2,6 +2,7 @@ TODO
 
 large object collision
 bg music
+sound effects
 fix white patch left behind on level transition bug
 
 DONE
