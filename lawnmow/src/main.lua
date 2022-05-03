@@ -1,7 +1,9 @@
 import "CoreLibs/graphics"
+import "CoreLibs/sprites"
 import "util"
 
 local gfx <const> = playdate.graphics
+local geo <const> = playdate.geometry
 local sound <const> = playdate.sound
 
 -- INIT
@@ -16,7 +18,7 @@ function init_game_state()
 end
 
 function init_game()
-  level_clear_percentage = 100 -- percentage of lawn mowed for a level to be complete
+  level_clear_percentage = 10 -- percentage of lawn mowed for a level to be complete
   frame_rate = 50 -- max refresh rate of playdate screen
 
   playdate.display.setRefreshRate(frame_rate)
@@ -49,6 +51,7 @@ function init_game()
 
   init_zone_map()
   draw_bg()
+  init_obstacle_map()
 end
 
 function reset()
@@ -64,6 +67,9 @@ end
 function init_sprites()
   -- lawnmower
   ball_img = gfx.image.new('img/ball.png')
+  ball_sprite = gfx.sprite.new(ball_img)
+  ball_sprite.setZIndex(ball_sprite, 1)
+  ball_sprite.add(ball_sprite)
   -- bg zone sprite, can be tiled to look like ugly grass
   grass_img = gfx.image.new('img/grass.png')
   -- colors
@@ -71,8 +77,13 @@ function init_sprites()
   black_img = gfx.image.new('img/black.png')
   -- level bg sprites
   fine_horizontal_stripes_img = gfx.image.new('img/fine_horizontal_stripes.png')
+  fine_horizontal_stripes_sprite = gfx.sprite.new(fine_horizontal_stripes_img)
+
   thick_horizontal_stripes_img = gfx.image.new('img/thick_horizontal_stripes.png')
+  thick_horizontal_stripes_sprite = gfx.sprite.new(thick_horizontal_stripes_img)
+
   squiggles_img = gfx.image.new('img/squiggles.png')
+  squiggles_sprite = gfx.sprite.new(squiggles_img)
 end
 
 function init_sounds()
@@ -83,13 +94,13 @@ function init_levels()
   
   -- is there a better way to do object literals in lua?
   levels[1] = {}
-  levels[1]['bg'] = fine_horizontal_stripes_img
+  levels[1]['bg'] = fine_horizontal_stripes_sprite
 
   levels[2] = {}
-  levels[2]['bg'] = thick_horizontal_stripes_img
+  levels[2]['bg'] = thick_horizontal_stripes_sprite
 
   levels[3] = {}
-  levels[3]['bg'] = squiggles_img
+  levels[3]['bg'] = squiggles_sprite
 end
 
 function init_zone_map()
@@ -104,6 +115,16 @@ function init_zone_map()
       total_zones = total_zones + 1
     end
   end
+end
+
+function init_obstacle_map()
+  rect_x = 40
+  rect_y = 60
+  rect_w = 100
+  rect_h = 80
+  
+  rect = geo.rect.new(rect_x, rect_y, rect_w, rect_h)
+  gfx.drawRect(rect)
 end
 
 -- INPUT
@@ -144,7 +165,13 @@ function update_physics(dt)
 end
 
 function handle_collisions()
-  -- -- wall collision
+  ball_rect = geo.rect.new(ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
+  if geo.rect.intersects(rect, ball_rect) then
+    print("intersect!")
+  else
+    print("...")
+  end
+  -- -- -- wall collision
   -- local collide_top = ball_pos[2] <= 0
   -- local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
   -- local collide_left = ball_pos[1] <= 0
@@ -200,7 +227,8 @@ end
 
 function draw_bg()
   draw_white_bg()
-  levels[level]['bg'].draw(levels[level]['bg'], 0, 0)
+  levels[level]['bg'].moveTo(levels[level]['bg'], window_dim[1] / 2, window_dim[2] / 2)
+  levels[level]['bg'].add(levels[level]['bg'])
 end
 
 function draw_zones()
@@ -219,7 +247,10 @@ function draw_ball()
     -- draw white tile where lawnmower was previously to simulate grass being removed
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
-  ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
+  -- ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
+  ball_sprite.moveTo(ball_sprite, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2))
+  ball_sprite.setRotation(ball_sprite, crank_angle)
+  
   prev_x = ball_pos[1] + (ball_dim[1] / 2)
   prev_y = ball_pos[2] + (ball_dim[2] / 2)
   prev_crank_angle = crank_angle
@@ -274,6 +305,7 @@ end
 function draw()
   draw_hud()
   draw_ball()
+  gfx.sprite.update()
 end
 
 -- LIFECYCLE
