@@ -69,10 +69,10 @@ function game_over()
 end
 
 function init_obstacles()
-  rect_x = 150
-  rect_y = 150
-  rect_w = 100
-  rect_h = 100
+  rect_x = 40
+  rect_y = 40
+  rect_w = 50
+  rect_h = 50
   
   rect_sprite = gfx.sprite.new(squiggles_img)
   rect_sprite:setSize(rect_w, rect_h)
@@ -151,9 +151,7 @@ end
 -- PHYSICS
 
 -- TODO see if dt usage matters here
-function update_physics(dt)
-  handle_collisions(dt)
-  
+function update_physics(dt)  
   ball_vec = {
     ball_pos[1] + ball_vel[1] * dt * speed_mult,
     ball_pos[2] + ball_vel[2] * dt * speed_mult
@@ -168,28 +166,19 @@ function update_physics(dt)
   })
 end
 
-function handle_collisions()
-  -- -- wall collision
-  -- local collide_top = ball_pos[2] <= 0
-  -- local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
-  -- local collide_left = ball_pos[1] <= 0
-  -- local collide_right = ball_pos[1] >= window_dim[1] - ball_dim[1]
-  -- local collided_with_wall = collide_top or collide_bottom or collide_left or collide_right
-end
-
 -- keep ball within playing area
 function get_valid_ball_pos(ball_pos)
-  if ball_pos[1] < 0 then
-    ball_pos[1] = 0
+  if ball_pos[1] < 0 + (ball_dim[1] / 2) then
+    ball_pos[1] = (ball_dim[1] / 2)
   end
-  if ball_pos[1] > window_dim[1] - ball_dim[1] then
-    ball_pos[1] = window_dim[1] - ball_dim[1]
+  if ball_pos[1] > window_dim[1] - ball_dim[1] + (ball_dim[2] / 2) then
+    ball_pos[1] = window_dim[1] - ball_dim[1] + (ball_dim[2] / 2)
   end
-  if ball_pos[2] < 0 then
-    ball_pos[2] = 0
+  if ball_pos[2] < 0  + (ball_dim[2] / 2) then
+    ball_pos[2] = (ball_dim[2] / 2)
   end
-  if ball_pos[2] > window_dim[2] - ball_dim[2] then
-    ball_pos[2] = window_dim[2] - ball_dim[2]
+  if ball_pos[2] > window_dim[2] - ball_dim[2] + (ball_dim[2] / 2) then
+    ball_pos[2] = window_dim[2] - ball_dim[2] + (ball_dim[2] / 2)
   end
   return ball_pos
 end
@@ -245,20 +234,25 @@ function draw_ball()
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
 
-  desired_x = ball_pos[1] + (ball_dim[1] / 2)
-  desired_y = ball_pos[2] + (ball_dim[2] / 2)
+  desired_x = ball_pos[1]
+  desired_y = ball_pos[2]
 
-  actual_x, actual_y = ball_sprite:moveWithCollisions(desired_x, desired_y)
+  ball_sprite:moveWithCollisions(desired_x, desired_y)
 
-  ball_pos[1] = actual_x - (ball_dim[1] / 2)
-  ball_pos[2] = actual_y - (ball_dim[2] / 2)
-  
+  ball_pos[1] = ball_sprite.x
+  ball_pos[2] = ball_sprite.y
+
   ball_sprite:setRotation(crank_angle)
   ball_img:drawRotated(ball_pos[1], ball_pos[2], crank_angle)
 
   prev_x = ball_pos[1]
   prev_y = ball_pos[2]
   prev_crank_angle = crank_angle
+end
+
+function draw_colliders()
+  gfx.drawRect(ball_sprite.x, ball_sprite.y, ball_sprite.width, ball_sprite.height)
+  gfx.drawRect(rect_sprite.x, rect_sprite.y, rect_sprite.width, rect_sprite.height)
 end
 
 function draw_white_bg()
@@ -310,6 +304,7 @@ end
 function draw()
   draw_hud()
   draw_ball()
+  -- draw_colliders()
 end
 
 -- LIFECYCLE
