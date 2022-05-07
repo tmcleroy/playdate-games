@@ -1,8 +1,14 @@
 import "CoreLibs/graphics"
+import "CoreLibs/sprites"
 import "util"
 
 local gfx <const> = playdate.graphics
+local geo <const> = playdate.geometry
 local sound <const> = playdate.sound
+
+function gfx.sprite:collisionResponse(other)
+  return "slide"
+end
 
 -- INIT
 
@@ -13,6 +19,7 @@ function init_game_state()
   init_sounds()
   init_sprites()
   init_levels()
+  init_obstacles()
 end
 
 function init_game()
@@ -61,6 +68,19 @@ function game_over()
   draw_game_over()
 end
 
+function init_obstacles()
+  rect_x = 150
+  rect_y = 150
+  rect_w = 100
+  rect_h = 100
+  
+  rect_sprite = gfx.sprite.new(squiggles_img)
+  rect_sprite:setSize(rect_w, rect_h)
+  rect_sprite:moveTo(rect_x, rect_y)
+  rect_sprite:setCollideRect(0, 0, rect_sprite:getSize())
+  rect_sprite:add()
+end
+
 function init_sprites()
   -- lawnmower
   ball_img = gfx.image.new('img/ball.png')
@@ -69,10 +89,15 @@ function init_sprites()
   -- colors
   white_img = gfx.image.new('img/white.png')
   black_img = gfx.image.new('img/black.png')
-  -- level bg sprites
+  -- level bg images
   fine_horizontal_stripes_img = gfx.image.new('img/fine_horizontal_stripes.png')
   thick_horizontal_stripes_img = gfx.image.new('img/thick_horizontal_stripes.png')
   squiggles_img = gfx.image.new('img/squiggles.png')
+
+  -- sprites for collision
+  ball_sprite = gfx.sprite.new(ball_img)
+  ball_sprite:setCollideRect(0, 0, ball_sprite:getSize())
+  ball_sprite:add()
 end
 
 function init_sounds()
@@ -219,9 +244,20 @@ function draw_ball()
     -- draw white tile where lawnmower was previously to simulate grass being removed
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
-  ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
-  prev_x = ball_pos[1] + (ball_dim[1] / 2)
-  prev_y = ball_pos[2] + (ball_dim[2] / 2)
+
+  desired_x = ball_pos[1] + (ball_dim[1] / 2)
+  desired_y = ball_pos[2] + (ball_dim[2] / 2)
+
+  actual_x, actual_y = ball_sprite:moveWithCollisions(desired_x, desired_y)
+
+  ball_pos[1] = actual_x - (ball_dim[1] / 2)
+  ball_pos[2] = actual_y - (ball_dim[2] / 2)
+  
+  ball_sprite:setRotation(crank_angle)
+  ball_img:drawRotated(ball_pos[1], ball_pos[2], crank_angle)
+
+  prev_x = ball_pos[1]
+  prev_y = ball_pos[2]
   prev_crank_angle = crank_angle
 end
 
