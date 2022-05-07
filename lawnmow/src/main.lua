@@ -6,37 +6,19 @@ local gfx <const> = playdate.graphics
 local geo <const> = playdate.geometry
 local sound <const> = playdate.sound
 
+function gfx.sprite:collisionResponse(other)
+  return "slide"
+end
+
 -- INIT
 
 function init_game_state()
   level = 1
   max_level = 3
   is_game_over = false
-  init_sounds()
-  init_sprites()
-  init_levels()
-end
 
-function init_game()
-  level_clear_percentage = 10 -- percentage of lawn mowed for a level to be complete
-  frame_rate = 50 -- max refresh rate of playdate screen
-
-  playdate.display.setRefreshRate(frame_rate)
-  playdate.resetElapsedTime()
-  
   -- window
   window_dim = {400, 240} -- playdate screen resolution
-
-  -- feature vals
-  speed_mult = 70 -- value to multiply dt by for consistent game speed across devices
-
-  -- score
-  score = 0
-
-  -- crank
-  crank_step_amount = 6
-  crank_angle = 0
-  crank_angle_rot = 90
 
   -- ball
   ball_dim = {20,20}
@@ -49,8 +31,31 @@ function init_game()
   min_ball_speed = 1
   max_ball_speed = 3
 
+  init_sounds()
+  init_sprites()
+  init_levels()
+end
+
+function init_game()
+  level_clear_percentage = 10 -- percentage of lawn mowed for a level to be complete
+  frame_rate = 50 -- max refresh rate of playdate screen
+
+  playdate.display.setRefreshRate(frame_rate)
+  playdate.resetElapsedTime()
+
+  -- feature vals
+  speed_mult = 70 -- value to multiply dt by for consistent game speed across devices
+
+  -- score
+  score = 0
+
+  -- crank
+  crank_step_amount = 6
+  crank_angle = 0
+  crank_angle_rot = 90
+
   init_zone_map()
-  draw_bg()
+  -- draw_bg()
   init_obstacle_map()
 end
 
@@ -69,6 +74,9 @@ function init_sprites()
   ball_img = gfx.image.new('img/ball.png')
   ball_sprite = gfx.sprite.new(ball_img)
   ball_sprite.setZIndex(ball_sprite, 1)
+  ball_rect = geo.rect.new(ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
+  ball_sprite:setCollideRect(0, 0, ball_sprite:getSize())
+  -- ball_sprite:collisionResponse(gfx.sprite.kCollisionTypeSlide)
   ball_sprite.add(ball_sprite)
   -- bg zone sprite, can be tiled to look like ugly grass
   grass_img = gfx.image.new('img/grass.png')
@@ -118,13 +126,20 @@ function init_zone_map()
 end
 
 function init_obstacle_map()
-  rect_x = 40
-  rect_y = 60
+  rect_x = 150
+  rect_y = 150
   rect_w = 100
-  rect_h = 80
+  rect_h = 100
   
   rect = geo.rect.new(rect_x, rect_y, rect_w, rect_h)
-  gfx.drawRect(rect)
+  rect_sprite = gfx.sprite.new(squiggles_img)
+  
+  rect_sprite.setSize(rect_sprite, rect_w, rect_h)
+  rect_sprite.moveTo(rect_sprite, rect_x, rect_y)
+  rect_sprite.setZIndex(rect_sprite, 1)
+  rect_sprite:setCollideRect(0, 0, rect_sprite:getSize())
+  rect_sprite.add(rect_sprite)
+  -- gfx.drawRect(rect)
 end
 
 -- INPUT
@@ -165,12 +180,12 @@ function update_physics(dt)
 end
 
 function handle_collisions()
-  ball_rect = geo.rect.new(ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
-  if geo.rect.intersects(rect, ball_rect) then
-    print("intersect!")
-  else
-    print("...")
-  end
+  -- ball_rect = geo.rect.new(ball_pos[1], ball_pos[2], ball_dim[1], ball_dim[2])
+  -- if geo.rect.intersects(rect, ball_rect) then
+  --   print("intersect!")
+  -- else
+  --   print("...")
+  -- end
   -- -- -- wall collision
   -- local collide_top = ball_pos[2] <= 0
   -- local collide_bottom = ball_pos[2] >= window_dim[2] - ball_dim[2]
@@ -247,9 +262,17 @@ function draw_ball()
     -- draw white tile where lawnmower was previously to simulate grass being removed
     white_img.drawRotated(white_img, prev_x, prev_y, prev_crank_angle)
   end
-  -- ball_img.drawRotated(ball_img, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2), crank_angle)
-  ball_sprite.moveTo(ball_sprite, ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2))
-  ball_sprite.setRotation(ball_sprite, crank_angle)
+  
+  new_x, new_y = ball_sprite:moveWithCollisions(ball_pos[1] + (ball_dim[1] / 2), ball_pos[2] + (ball_dim[2] / 2))
+  ball_pos[1] = new_x - (ball_dim[1] / 2)
+  ball_pos[2] = new_y - (ball_dim[2] / 2)
+  ball_sprite:setRotation(crank_angle)
+  ball_img:drawRotated(ball_pos[1], ball_pos[2], crank_angle)
+
+  ball_collide_rect = ball_sprite:getCollideRect()
+  rect_collide_rect = rect_sprite:getCollideRect()
+  gfx.drawRect(ball_collide_rect)
+  gfx.drawRect(rect_collide_rect)
   
   prev_x = ball_pos[1] + (ball_dim[1] / 2)
   prev_y = ball_pos[2] + (ball_dim[2] / 2)
@@ -311,7 +334,7 @@ end
 -- LIFECYCLE
 
 function update_game_state()
-  if (score == level_clear_percentage) then
+  if (is_game_over == false and score >= level_clear_percentage) then
     level = level + 1
     if level > max_level then
       game_over()
